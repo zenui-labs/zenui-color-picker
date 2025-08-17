@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ColorFormat } from '../types';
+import React, {useEffect, useState} from 'react';
+import {ColorFormat} from '../types';
 
 interface ColorInputProps {
     value: string;
@@ -73,7 +73,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
             onBlur={handleBlur}
             placeholder={placeholder}
             className={`
-        w-full px-3 py-2 rounded-lg border text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors
+        w-full px-3 py-2 rounded-lg border focus:border-brandColor text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--color-brandColor)] transition-colors
         ${isValid
                 ? (theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900')
                 : 'border-red-300 bg-red-50 text-red-900'

@@ -16,7 +16,7 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+        <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
@@ -47,16 +47,17 @@ function App() {
                             <ColorPicker
                                 value={selectedColor}
                                 format={colorFormat}
+                                brandColor={'#bcb30a'}
                                 variant="advanced"
-                                showAlpha={true}
-                                showHistory={true}
-                                showEyeDropper={true}
+                                showHistory={false}
+                                showFormats={false}
+                                enableFavorite={false}
                                 onChange={handleColorChange}
                                 onFormatChange={handleFormatChange}
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Current Color</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
                                     {selectedColor}
                                 </div>
                             </div>
@@ -79,7 +80,7 @@ function App() {
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Format</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
                                     HEX
                                 </div>
                             </div>
@@ -102,7 +103,7 @@ function App() {
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Variant</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
                                     Compact
                                 </div>
                             </div>
@@ -124,7 +125,7 @@ function App() {
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Format</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
                                     RGB
                                 </div>
                             </div>
@@ -145,7 +146,7 @@ function App() {
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Format</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
                                     HSL
                                 </div>
                             </div>
@@ -167,7 +168,7 @@ function App() {
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-400 mb-1">Theme</div>
-                                <div className="font-mono text-sm bg-gray-700 text-white p-2 rounded">
+                                <div className="font-mono text-sm bg-gray-700 text-white p-2 rounded-sm">
                                     Dark
                                 </div>
                             </div>

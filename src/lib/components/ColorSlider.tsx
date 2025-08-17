@@ -1,5 +1,5 @@
-import React, { useRef, useCallback } from 'react';
-import { ColorValue } from '../types';
+import React, {useCallback, useRef} from 'react';
+import {ColorValue} from '../types';
 
 interface ColorSliderProps {
     type: 'hue' | 'saturation' | 'brightness' | 'alpha';
@@ -16,33 +16,13 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
                                                         }) => {
     const sliderRef = useRef<HTMLDivElement>(null);
 
-    const getBackground = () => {
-        switch (type) {
-            case 'hue':
-                return 'linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)';
-            case 'saturation':
-                return `linear-gradient(to right, hsl(${color.hsv.h}, 0%, ${color.hsv.v}%), hsl(${color.hsv.h}, 100%, ${color.hsv.v}%))`;
-            case 'brightness':
-                return `linear-gradient(to right, hsl(${color.hsv.h}, ${color.hsv.s}%, 0%), hsl(${color.hsv.h}, ${color.hsv.s}%, 100%))`;
-            case 'alpha':
-                return `linear-gradient(to right, 
-          transparent, ${color.hex}), 
-          linear-gradient(45deg, #ccc 25%, transparent 25%), 
-          linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-          linear-gradient(45deg, transparent 75%, #ccc 75%), 
-          linear-gradient(-45deg, transparent 75%, #ccc 75%)`;
-            default:
-                return '';
-        }
-    };
-
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const slider = sliderRef.current;
         if (!slider) return;
 
         const rect = slider.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, x / rect.width));
+        const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        const percentage = x / rect.width;
 
         let newValue: number;
         switch (type) {
@@ -75,16 +55,56 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
     }, [handleMouseMove, handleMouseUp]);
 
     const getThumbPosition = () => {
+        let percentage: number;
+
         switch (type) {
             case 'hue':
-                return (value / 360) * 100;
+                percentage = value / 360;
+                break;
             case 'saturation':
             case 'brightness':
-                return (value / 100) * 100;
+                percentage = value / 100;
+                break;
             case 'alpha':
-                return value * 100;
+                percentage = value;
+                break;
             default:
-                return 0;
+                percentage = 0;
+        }
+
+        percentage = Math.max(0, Math.min(1, percentage));
+
+        const thumbRadius = 12;
+        const thumbWidthPercentage = (thumbRadius / (sliderRef.current?.offsetWidth || 200)) * 100;
+
+        const minPosition = thumbWidthPercentage;
+        const maxPosition = 100 - thumbWidthPercentage;
+
+        return minPosition + (percentage * (maxPosition - minPosition));
+    };
+
+    const getBackgroundStyle = () => {
+        switch (type) {
+            case "hue":
+                return {
+                    backgroundImage:
+                        "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)",
+                };
+            case "saturation":
+                return {
+                    backgroundImage: `linear-gradient(to right, hsl(${color.hsv.h}, 0%, ${color.hsv.v}%), hsl(${color.hsv.h}, 100%, ${color.hsv.v}%))`,
+                };
+            case "brightness":
+                return {
+                    backgroundImage: `linear-gradient(to right, hsl(${color.hsv.h}, ${color.hsv.s}%, 0%), hsl(${color.hsv.h}, ${color.hsv.s}%, 100%))`,
+                };
+            case "alpha":
+                const solidColor = color.hex.length === 9 ? color.hex.substring(0, 7) : color.hex;
+                return {
+                    backgroundImage: `linear-gradient(to right, transparent, ${solidColor})`,
+                };
+            default:
+                return {};
         }
     };
 
@@ -96,15 +116,12 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
             <div
                 ref={sliderRef}
                 className="relative h-4 rounded-lg cursor-pointer shadow-inner"
-                style={{
-                    background: getBackground(),
-                    backgroundSize: type === 'alpha' ? '20px 20px, 10px 10px, 10px 10px, 10px 10px, 10px 10px' : 'auto'
-                }}
+                style={getBackgroundStyle()}
                 onMouseDown={handleMouseDown}
             >
                 <div
-                    className="absolute w-4 h-4 bg-white border-2 border-gray-400 rounded-full shadow-lg transform -translate-x-2 -translate-y-0 cursor-grab active:cursor-grabbing"
-                    style={{ left: `${getThumbPosition()}%` }}
+                    className="absolute w-6 h-6 hover:scale-[1.1] hover:border-blue-500 bg-white border-2 border-gray-400 rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
+                    style={{left: `${getThumbPosition()}%`}}
                 />
             </div>
         </div>

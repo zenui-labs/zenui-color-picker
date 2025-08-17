@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { ColorValue } from '../types';
-import { colorToValue, hsvToRgb } from '../utils/colorUtils';
+import React, {useCallback, useEffect, useRef} from 'react';
+import {ColorValue} from '../types';
+import {colorToValue, hsvToRgb} from '../utils/colorUtils';
 
 interface ColorWheelProps {
     color: ColorValue;
@@ -75,14 +75,22 @@ export const ColorWheel: React.FC<ColorWheelProps> = ({
         ctx.fillStyle = satGradient;
         ctx.fill();
 
-        // Brightness gradient (transparent to black from top to bottom)
-        const brightGradient = ctx.createLinearGradient(centerX, centerY - circleRadius, centerX, centerY + circleRadius);
-        brightGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        brightGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-        ctx.fillStyle = brightGradient;
-        ctx.fill();
+        // Brightness gradient - draw manually using angular segments
+        for (let angle = 0; angle < 360; angle += 2) {
+            const startAngle = (angle - 1) * Math.PI / 180;
+            const endAngle = (angle + 1) * Math.PI / 180;
+
+            // Calculate brightness based on angle (0° = 0% brightness, 360° = 100% brightness)
+            const brightness = angle / 360;
+            const alpha = 1 - brightness; // Invert for black overlay
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, circleRadius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+            ctx.fill();
+        }
 
         // Draw current position indicators
         // Hue indicator on wheel
@@ -101,7 +109,7 @@ export const ColorWheel: React.FC<ColorWheelProps> = ({
 
         // Saturation/brightness indicator in the inner circle
         const saturationRadius = (color.hsv.s / 100) * circleRadius;
-        const brightnessAngle = ((100 - color.hsv.v) / 100) * Math.PI * 2;
+        const brightnessAngle = (color.hsv.v / 100) * Math.PI * 2; // Direct mapping: brightness to angle
         const satX = centerX + Math.cos(brightnessAngle) * saturationRadius;
         const satY = centerY + Math.sin(brightnessAngle) * saturationRadius;
 
@@ -155,8 +163,13 @@ export const ColorWheel: React.FC<ColorWheelProps> = ({
 
         if (distance <= circleRadius) {
             const saturation = Math.max(0, Math.min(100, (distance / circleRadius) * 100));
+
+            // Fixed brightness calculation to match the new angular brightness system
             const brightnessAngle = Math.atan2(dy, dx);
-            const brightness = Math.max(0, Math.min(100, 100 - ((brightnessAngle + Math.PI) / (Math.PI * 2)) * 100));
+            // Convert angle to 0-360 degrees and map directly to brightness
+            const angleDegrees = brightnessAngle * 180 / Math.PI;
+            const normalizedAngle = angleDegrees < 0 ? angleDegrees + 360 : angleDegrees;
+            const brightness = Math.max(0, Math.min(100, (normalizedAngle / 360) * 100));
 
             const newColor = colorToValue(
                 ...Object.values(hsvToRgb(color.hsv.h, saturation, brightness)),
@@ -189,7 +202,7 @@ export const ColorWheel: React.FC<ColorWheelProps> = ({
                 height={size}
                 onMouseDown={handleMouseDown}
                 className="cursor-crosshair rounded-lg"
-                style={{ width: size, height: size }}
+                style={{width: size, height: size}}
             />
         </div>
     );

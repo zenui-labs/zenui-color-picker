@@ -24,7 +24,7 @@ export interface ColorPickerProps {
     value?: string;
     format?: ColorFormat;
     variant?: 'basic' | 'advanced' | 'compact' | 'palette';
-    theme?: 'light' | 'dark' | 'auto' | ColorPickerTheme;
+    theme?: 'light' | 'dark';
     disabled?: boolean;
     showAlpha?: boolean;
     showEyeDropper?: boolean;
@@ -39,6 +39,10 @@ export interface ColorPickerProps {
     onFormatChange?: (format: ColorFormat) => void;
     onOpen?: () => void;
     onClose?: () => void;
+    brandColor?: string;
+    enableFavorite?: boolean;
+    showPresets?: boolean
+    enableShuffle?: boolean
 }
 
 export interface UseColorPickerOptions {
