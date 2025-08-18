@@ -23,59 +23,17 @@
     background: #a1a1a1;
 }
 
-/* Global transitions */
-* {
-    transition-property: color, background-color, border-color, opacity, transform, box-shadow;
-    transition-duration: 150ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes slideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Focus styles using dynamic brand color */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-    outline: 2px solid var(--brand-color);
-    outline-offset: 2px;
-}
-
-/* User interaction styles */
-button,
-.cursor-crosshair,
-.cursor-pointer,
-.cursor-grab {
-    user-select: none;
-}
-
-/* Utility classes that use the dynamic brand color */
-.bg-brand {
-    background-color: var(--brand-color);
-}
-
-.text-brand {
-    color: var(--brand-color);
-}
-
-.border-brand {
-    border-color: var(--brand-color);
-}
-
-.hover\:bg-brand:hover {
-    background-color: var(--brand-color);
-}
-
-.hover\:text-brand:hover {
-    color: var(--brand-color);
-}
-
-/* Brand color with opacity variants */
-.bg-brand\/10 {
-    background-color: color-mix(in srgb, var(--brand-color) 10%, transparent);
-}
-
-.bg-brand\/20 {
-    background-color: color-mix(in srgb, var(--brand-color) 20%, transparent);
-}
-
-.bg-brand\/50 {
-    background-color: color-mix(in srgb, var(--brand-color) 50%, transparent);
+.animate-slideDown {
+    animation: slideDown 0.2s ease-out forwards;
 }

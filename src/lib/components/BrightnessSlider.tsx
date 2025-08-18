@@ -8,12 +8,12 @@ interface ColorSliderProps {
     onChange: (value: number) => void;
 }
 
-export const ColorSlider: React.FC<ColorSliderProps> = ({
-                                                            type,
-                                                            value,
-                                                            color,
-                                                            onChange
-                                                        }) => {
+export const BrightnessSlider: React.FC<ColorSliderProps> = ({
+                                                                 type,
+                                                                 value,
+                                                                 color,
+                                                                 onChange
+                                                             }) => {
     const sliderRef = useRef<HTMLDivElement>(null);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -109,21 +109,16 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
     };
 
     return (
-        <div className="mb-3">
-            <label className="block text-sm font-medium mb-2 text-gray-600 capitalize">
-                {type} {type === 'alpha' && `(${Math.round(value * 100)}%)`}
-            </label>
+        <div
+            ref={sliderRef}
+            className="relative h-4 rounded-lg cursor-pointer shadow-inner mb-5"
+            style={getBackgroundStyle()}
+            onMouseDown={handleMouseDown}
+        >
             <div
-                ref={sliderRef}
-                className="relative h-4 rounded-lg cursor-pointer shadow-inner"
-                style={getBackgroundStyle()}
-                onMouseDown={handleMouseDown}
-            >
-                <div
-                    className="absolute w-6 h-6 hover:scale-[1.1] hover:border-blue-500 bg-white border-2 border-gray-400 rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
-                    style={{left: `${getThumbPosition()}%`}}
-                />
-            </div>
+                className="absolute w-6 h-6 hover:scale-[1.1] hover:border-[var(--brand-color)] bg-white hover:border-3 border-2 border-gray-400 rounded-full transition-colors duration-200 shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
+                style={{left: `${getThumbPosition()}%`}}
+            />
         </div>
     );
 };

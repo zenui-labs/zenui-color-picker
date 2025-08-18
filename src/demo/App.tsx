@@ -7,7 +7,6 @@ function App() {
     const [colorFormat, setColorFormat] = useState<ColorFormat>('hex');
 
     const handleColorChange = (color: ColorValue, format: ColorFormat) => {
-        console.log('Color changed:', {color, format});
         setSelectedColor(color.hex);
     };
 
@@ -39,7 +38,7 @@ function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
                     {/* Advanced Variant */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4">Advanced Color Picker</h3>
+                        <h3 className="text-xl font-semibold mb-4">Wheel Picker</h3>
                         <p className="text-gray-600 mb-6">
                             Full-featured color picker with color wheel, history, and favorites
                         </p>
@@ -48,9 +47,10 @@ function App() {
                                 value={selectedColor}
                                 format={colorFormat}
                                 brandColor={'#bcb30a'}
-                                variant="advanced"
+                                variant="wheel"
+                                enableHueSlider={false}
                                 showHistory={false}
-                                showFormats={false}
+                                showFormats={true}
                                 enableFavorite={false}
                                 onChange={handleColorChange}
                                 onFormatChange={handleFormatChange}
@@ -66,17 +66,22 @@ function App() {
 
                     {/* Basic Variant */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4">Basic Color Picker</h3>
+                        <h3 className="text-xl font-semibold mb-4">Slider Picker</h3>
                         <p className="text-gray-600 mb-6">
                             Simple color picker with essential features
                         </p>
                         <div className="flex items-center gap-4">
                             <ColorPicker
-                                value="#FF6B6B"
-                                variant="basic"
-                                showAlpha={false}
+                                value={selectedColor}
+                                format={colorFormat}
+                                brandColor={'#bcb30a'}
+                                variant="hue-slider"
+                                enableHueSlider={true}
                                 showHistory={false}
-                                onChange={(color) => console.log('Basic picker:', color)}
+                                showFormats={true}
+                                enableFavorite={false}
+                                onChange={handleColorChange}
+                                onFormatChange={handleFormatChange}
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Format</div>
@@ -89,17 +94,22 @@ function App() {
 
                     {/* Compact Variant */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4">Compact Color Picker</h3>
+                        <h3 className="text-xl font-semibold mb-4">Box Picker</h3>
                         <p className="text-gray-600 mb-6">
                             Space-efficient design for tight layouts
                         </p>
                         <div className="flex items-center gap-4">
                             <ColorPicker
-                                value="#4ECDC4"
-                                variant="compact"
-                                showAlpha={true}
+                                value={selectedColor}
+                                format={colorFormat}
+                                brandColor={'#bcb30a'}
+                                variant="hue-box"
+                                enableHueSlider={true}
+                                showHistory={false}
                                 showFormats={true}
-                                onChange={(color) => console.log('Compact picker:', color)}
+                                enableFavorite={false}
+                                onChange={handleColorChange}
+                                onFormatChange={handleFormatChange}
                             />
                             <div className="flex-1">
                                 <div className="text-sm text-gray-500 mb-1">Variant</div>
@@ -110,44 +120,29 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Different Formats */}
+                    {/* Compact Variant */}
                     <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4">RGB Format</h3>
+                        <h3 className="text-xl font-semibold mb-4">Advance Picker</h3>
                         <p className="text-gray-600 mb-6">
-                            Color picker with RGB format support
+                            Space-efficient design for tight layouts
                         </p>
                         <div className="flex items-center gap-4">
                             <ColorPicker
-                                value="rgb(139, 92, 246)"
-                                format="rgb"
-                                variant="advanced"
-                                onChange={(color) => console.log('RGB picker:', color)}
+                                value={selectedColor}
+                                format={colorFormat}
+                                brandColor={'#bcb30a'}
+                                variant="advance"
+                                enableHueSlider={true}
+                                showHistory={false}
+                                showFormats={true}
+                                enableFavorite={false}
+                                onChange={handleColorChange}
+                                onFormatChange={handleFormatChange}
                             />
                             <div className="flex-1">
-                                <div className="text-sm text-gray-500 mb-1">Format</div>
+                                <div className="text-sm text-gray-500 mb-1">Variant</div>
                                 <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
-                                    RGB
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4">HSL Format</h3>
-                        <p className="text-gray-600 mb-6">
-                            Color picker with HSL format support
-                        </p>
-                        <div className="flex items-center gap-4">
-                            <ColorPicker
-                                value="hsl(45, 93%, 73%)"
-                                format="hsl"
-                                variant="advanced"
-                                onChange={(color) => console.log('HSL picker:', color)}
-                            />
-                            <div className="flex-1">
-                                <div className="text-sm text-gray-500 mb-1">Format</div>
-                                <div className="font-mono text-sm bg-gray-50 p-2 rounded-sm">
-                                    HSL
+                                    Compact
                                 </div>
                             </div>
                         </div>
@@ -163,7 +158,7 @@ function App() {
                             <ColorPicker
                                 value="#F97316"
                                 theme="dark"
-                                variant="advanced"
+                                variant="wheel"
                                 onChange={(color) => console.log('Dark theme picker:', color)}
                             />
                             <div className="flex-1">

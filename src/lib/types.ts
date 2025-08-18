@@ -23,7 +23,7 @@ export interface ColorPickerTheme {
 export interface ColorPickerProps {
     value?: string;
     format?: ColorFormat;
-    variant?: 'basic' | 'advanced' | 'compact' | 'palette';
+    variant?: 'wheel' | 'hue-slider' | 'advance' | 'hue-box';
     theme?: 'light' | 'dark';
     disabled?: boolean;
     showAlpha?: boolean;
@@ -39,10 +39,11 @@ export interface ColorPickerProps {
     onFormatChange?: (format: ColorFormat) => void;
     onOpen?: () => void;
     onClose?: () => void;
+    enableHueSlider?: boolean;
     brandColor?: string;
     enableFavorite?: boolean;
-    showPresets?: boolean
-    enableShuffle?: boolean
+    showPresets?: boolean;
+    enableShuffle?: boolean;
 }
 
 export interface UseColorPickerOptions {

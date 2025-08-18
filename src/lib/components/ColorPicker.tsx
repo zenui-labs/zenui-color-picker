@@ -1,11 +1,15 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Copy, Heart, History, RotateCcw} from 'lucide-react';
+import {Check, Copy, Heart, History, RotateCcw} from 'lucide-react';
 import {ColorFormat, ColorPickerProps, ColorValue} from '../types';
-import {colorToValue, formatColorValue, parseColor} from '../utils/colorUtils';
+import {colorToValue, formatColorValue, hsvToRgb, parseColor} from '../utils/colorUtils';
 import {useColorPicker} from '../hooks/useColorPicker';
-import {ColorWheel} from './ColorWheel';
-import {ColorSlider} from './ColorSlider';
+import {BrightnessSlider} from './BrightnessSlider.tsx';
 import {ColorInput} from './ColorInput';
+import {ColorSlider} from "./variants/ColorSlider.tsx";
+import {WheelPicker} from "./variants/wheel-picker.tsx";
+import {HueBox} from "./variants/hue-box.tsx";
+import FormatSelect from "./FormatSelect.tsx";
+import AdvancePicker from "./variants/advance-picker.tsx";
 
 const defaultPresetColors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
@@ -15,7 +19,7 @@ const defaultPresetColors = [
 export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             value,
                                                             format = 'hex',
-                                                            variant = 'advanced',
+                                                            variant = 'wheel',
                                                             theme = 'light',
                                                             disabled = false,
                                                             showAlpha = true,
@@ -27,6 +31,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             className = '',
                                                             style,
                                                             onChange,
+                                                            enableHueSlider = false,
                                                             showPresets = true,
                                                             onFormatChange,
                                                             onOpen,
@@ -59,6 +64,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
+    const [currentHue, setCurrentHue] = useState<number>(180);
 
     useEffect(() => {
         if (value) {
@@ -84,32 +90,36 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         }
     }, [isOpen]);
 
-    // Calculate dropdown position based on available space
+    useEffect(() => {
+        const newHue = hsvToRgb(currentHue, 100, 100)
+        const newColor = colorToValue(
+            newHue.r,
+            newHue.g,
+            newHue.b,
+        );
+        handleColorChange(newColor);
+    }, [currentHue])
+
     const calculateDropdownPosition = () => {
         if (!triggerRef.current) return;
 
         const triggerRect = triggerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
 
-        // Estimate dropdown height based on variant and features
-        let estimatedHeight = 200; // Base height
-        if (variant === 'advanced') estimatedHeight += 100;
+        let estimatedHeight = 200;
         if (showAlpha) estimatedHeight += 50;
         if (showPresets && presetColors.length > 0) estimatedHeight += 80;
         if (showHistory && colorHistory.length > 0) estimatedHeight += 60;
         if (enableFavorite && favoriteColors.length > 0) estimatedHeight += 60;
-        if (variant === 'compact') estimatedHeight = 280;
 
-        const spaceBelow = viewportHeight - triggerRect.bottom - 10; // 10px margin
-        const spaceAbove = triggerRect.top - 10; // 10px margin
+        const spaceBelow = viewportHeight - triggerRect.bottom - 10;
+        const spaceAbove = triggerRect.top - 10;
 
-        // Prefer bottom position, but switch to top if not enough space below
         if (spaceBelow >= estimatedHeight) {
             setDropdownPosition('bottom');
         } else if (spaceAbove >= estimatedHeight) {
             setDropdownPosition('top');
         } else {
-            // If neither has enough space, choose the side with more space
             setDropdownPosition(spaceBelow > spaceAbove ? 'bottom' : 'top');
         }
     };
@@ -117,7 +127,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     const handleOpen = () => {
         if (disabled) return;
         setIsOpen(true);
-        // Calculate position after state update to ensure proper positioning
         setTimeout(calculateDropdownPosition, 0);
         onOpen?.();
     };
@@ -146,7 +155,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         }
     };
 
-    // Recalculate position on window resize
     useEffect(() => {
         const handleResize = () => {
             if (isOpen) {
@@ -169,7 +177,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         ...style
     };
 
-    // Dynamic positioning styles
     const getDropdownStyles = () => {
         const baseStyles = {
             position: 'absolute' as const,
@@ -215,7 +222,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     className={`
             p-4 rounded-xl shadow-2xl border backdrop-blur-xs
             ${themeClasses}
-            ${variant === 'compact' ? 'w-64' : 'w-80'}
+            ${variant === 'advance' ? 'w-max' : 'w-80'}
           `}
                     style={getDropdownStyles()}
                 >
@@ -235,7 +242,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                   `}
                                     title={copySuccess ? 'Copied!' : 'Copy color'}
                                 >
-                                    <Copy size={16}/>
+                                    {
+                                        copySuccess ? (
+                                            <Check size={16}/>
+                                        ) : (
+                                            <Copy size={16}/>
+                                        )
+                                    }
                                 </button>
                             )}
                             {
@@ -252,21 +265,58 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         </div>
                     </div>
 
-                    {/* Color Wheel/Slider */}
-                    {variant !== 'compact' && (
-                        <div className="mb-4">
-                            <ColorWheel
+                    {
+                        variant === 'wheel' && (
+                            <div className="mb-4">
+                                <WheelPicker
+                                    color={currentColor}
+                                    onChange={handleColorChange}
+                                    size={220}
+                                />
+                            </div>
+                        )
+                    }
+
+                    {
+                        variant === 'hue-box' && (
+                            <HueBox
                                 color={currentColor}
                                 onChange={handleColorChange}
-                                size={variant === 'basic' ? 180 : 220}
                             />
-                        </div>
-                    )}
+                        )
+                    }
+
+                    {
+                        (variant === 'hue-slider' || enableHueSlider) && variant !== 'advance' && (
+                            <ColorSlider
+                                hue={currentHue}
+                                onChange={setCurrentHue}
+                            />
+                        )
+                    }
+
+                    {
+                        variant === 'advance' && (
+                            <AdvancePicker
+                                currentColor={currentColor}
+                                currentFormat={currentFormat}
+                                currentHue={currentHue}
+                                setCurrentHue={setCurrentHue}
+                                handleColorChange={handleColorChange}
+                                addToFavorites={addToFavorites}
+                                removeFromFavorites={removeFromFavorites}
+                                presetColors={presetColors}
+                                favoriteColors={favoriteColors}
+                                colorHistory={colorHistory}
+                                showFormats={showFormats}
+                            />
+                        )
+                    }
 
                     {/* Alpha Slider */}
-                    {showAlpha && (
+                    {variant !== 'advance' && showAlpha && (
                         <div className="mb-4">
-                            <ColorSlider
+                            <BrightnessSlider
                                 type="alpha"
                                 value={currentColor.rgb.a || 1}
                                 color={currentColor}
@@ -284,39 +334,31 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     )}
 
                     {/* Format Selector & Input */}
-                    <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            {showFormats && (
-                                <select
-                                    value={currentFormat}
-                                    onChange={(e) => handleFormatChange(e.target.value as ColorFormat)}
-                                    className={`
-                    px-3 py-1 rounded-lg border text-sm focus:outline-hidden focus:ring-2 focus:ring-brandColor
-                    ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}
-                  `}
-                                >
-                                    <option value="hex">HEX</option>
-                                    <option value="rgb">RGB</option>
-                                    <option value="hsl">HSL</option>
-                                    <option value="hsv">HSV</option>
-                                    <option value="cmyk">CMYK</option>
-                                </select>
-                            )}
-                        </div>
+                    {
+                        variant !== 'advance' && showFormats && (
+                            <div className="mb-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    {showFormats && (
+                                        <FormatSelect currentFormat={currentFormat} handleFormatChange={handleFormatChange}
+                                                      theme={theme}/>
+                                    )}
+                                </div>
 
-                        <ColorInput
-                            value={currentColorString}
-                            format={currentFormat}
-                            onChange={(colorString) => {
-                                const parsed = parseColor(colorString);
-                                if (parsed) handleColorChange(parsed);
-                            }}
-                            theme={theme}
-                        />
-                    </div>
+                                <ColorInput
+                                    value={currentColorString}
+                                    format={currentFormat}
+                                    onChange={(colorString) => {
+                                        const parsed = parseColor(colorString);
+                                        if (parsed) handleColorChange(parsed);
+                                    }}
+                                    theme={theme}
+                                />
+                            </div>
+                        )
+                    }
 
                     {/* Preset Colors */}
-                    {showPresets && presetColors.length > 0 && (
+                    {variant !== 'advance' && showPresets && presetColors.length > 0 && (
                         <div className="mb-4">
                             <h4 className="text-sm font-medium mb-2 text-gray-600">Preset Colors</h4>
                             <div className="grid grid-cols-7 gap-2">
@@ -337,8 +379,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     )}
 
                     {/* History & Favorites */}
-                    {variant !== 'compact' && (
-                        showHistory && colorHistory.length > 0 && (
+                    {
+                        variant !== 'advance' && showHistory && colorHistory.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
                                     <History size={14}/>
@@ -358,10 +400,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                 </div>
                             </div>
                         )
-                    )}
+                    }
 
                     {
-                        enableFavorite && favoriteColors.length > 0 && (
+                        variant !== 'advance' && enableFavorite && favoriteColors.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
                                     <Heart size={14}/>
@@ -385,7 +427,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
                     {/* Current Color Display */}
                     {
-                        enableFavorite && (
+                        variant !== 'advance' && enableFavorite && (
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <div className="flex items-center gap-3">
                                     <div
