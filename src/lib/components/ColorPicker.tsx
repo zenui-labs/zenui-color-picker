@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Check, Copy, Heart, History, RotateCcw} from 'lucide-react';
+import {Check, Copy, Heart, RotateCcw} from 'lucide-react';
 import {ColorFormat, ColorPickerProps, ColorValue} from '../types';
 import {colorToValue, formatColorValue, hsvToRgb, parseColor} from '../utils/colorUtils';
 import {useColorPicker} from '../hooks/useColorPicker';
@@ -31,6 +31,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             className = '',
                                                             style,
                                                             onChange,
+                                                            title = 'Color Picker',
                                                             enableHueSlider = false,
                                                             showPresets = true,
                                                             onFormatChange,
@@ -138,6 +139,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
     const handleColorChange = (color: ColorValue) => {
         updateColor(color);
+        setCurrentHue(color.hsv.h);
         onChange?.(color, currentFormat);
     };
 
@@ -228,15 +230,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">Color Picker</h3>
+                        <h3 className="text-lg font-semibold">{title}</h3>
                         <div className="flex items-center gap-2">
                             {showCopyButton && (
                                 <button
                                     onClick={handleCopy}
                                     className={`
-                    p-2 rounded-lg transition-colors duration-200
+                    p-2 rounded-lg transition-colors duration-200 cursor-pointer
                     ${copySuccess
-                                        ? 'bg-green-100 text-green-600'
+                                        ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
                                         : 'hover:bg-gray-100 text-gray-600'
                                     }
                   `}
@@ -302,6 +304,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                 currentFormat={currentFormat}
                                 currentHue={currentHue}
                                 setCurrentHue={setCurrentHue}
+                                currentColorString={currentColorString}
+                                handleFormatChange={handleFormatChange}
                                 handleColorChange={handleColorChange}
                                 addToFavorites={addToFavorites}
                                 removeFromFavorites={removeFromFavorites}
@@ -383,7 +387,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         variant !== 'advance' && showHistory && colorHistory.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
-                                    <History size={14}/>
                                     Recent Colors
                                 </h4>
                                 <div className="flex flex-wrap gap-1">

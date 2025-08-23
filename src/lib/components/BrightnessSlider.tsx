@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ColorValue} from '../types';
 
 interface ColorSliderProps {
@@ -15,6 +15,7 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
                                                                  onChange
                                                              }) => {
     const sliderRef = useRef<HTMLDivElement>(null);
+    const [currentColor, setCurrentColor] = useState<ColorValue | null>(null);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const slider = sliderRef.current;
@@ -42,6 +43,10 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
 
         onChange(newValue);
     }, [onChange, type]);
+
+    useEffect(() => {
+        setCurrentColor(color);
+    }, [color]);
 
     const handleMouseUp = useCallback(() => {
         document.removeEventListener('mousemove', handleMouseMove);
@@ -108,6 +113,20 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
         }
     };
 
+    const getThumbColor = () => {
+        if (!currentColor) return "#fff";
+
+        switch (type) {
+            case "alpha":
+                return `hsl(${currentColor.hsv.h}, ${currentColor.hsv.s}%, 50%)`;
+            case "saturation":
+                return `hsl(${currentColor.hsv.h}, 100%, ${currentColor.hsv.v}%)`;
+            default:
+                return currentColor.hex;
+        }
+    };
+
+
     return (
         <div
             ref={sliderRef}
@@ -116,8 +135,8 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
             onMouseDown={handleMouseDown}
         >
             <div
-                className="absolute w-6 h-6 hover:scale-[1.1] hover:border-[var(--brand-color)] bg-white hover:border-3 border-2 border-gray-400 rounded-full transition-colors duration-200 shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
-                style={{left: `${getThumbPosition()}%`}}
+                className="absolute w-6 h-6 hover:scale-[1.2] hover:border-3 border-2 border-white rounded-full transition-colors duration-200 shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
+                style={{left: `${getThumbPosition()}%`, backgroundColor: getThumbColor()}}
             />
         </div>
     );

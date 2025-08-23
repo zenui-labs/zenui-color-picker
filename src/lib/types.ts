@@ -26,6 +26,7 @@ export interface ColorPickerProps {
     variant?: 'wheel' | 'hue-slider' | 'advance' | 'hue-box';
     theme?: 'light' | 'dark';
     disabled?: boolean;
+    title?: string
     showAlpha?: boolean;
     showEyeDropper?: boolean;
     showHistory?: boolean;

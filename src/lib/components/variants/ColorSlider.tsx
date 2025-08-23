@@ -1,4 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {colorToValue, hsvToRgb} from "../../utils/colorUtils.ts";
+import {ColorValue} from "../../types.ts";
 
 interface ColorSliderProps {
     hue: number;
@@ -18,6 +20,7 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
     const sliderRef = useRef<HTMLDivElement>(null);
     const isDraggingRef = useRef(false);
     const [containerWidth, setContainerWidth] = useState(width);
+    const [currentColor, setCurrentColor] = useState<ColorValue | null>(null);
 
     useEffect(() => {
         const updateWidth = () => {
@@ -64,6 +67,17 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
         onChange(newHue);
     }, [onChange, getHueFromPosition]);
 
+    useEffect(() => {
+        const newHue = hsvToRgb(hue, 100, 100)
+        const newColor = colorToValue(
+            newHue.r,
+            newHue.g,
+            newHue.b,
+        );
+        console.log(newColor)
+        setCurrentColor(newColor);
+    }, [hue])
+
     const handleMouseUp = useCallback(() => {
         isDraggingRef.current = false;
         document.removeEventListener('mousemove', handleMouseMove);
@@ -98,8 +112,8 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
                 onMouseDown={handleMouseDown}
             >
                 <div
-                    className="absolute w-6 h-6 hover:scale-[1.1] hover:border-[var(--brand-color)] hover:border-3 transition-colors duration-200 bg-white border-2 border-gray-400 rounded-full shadow-lg transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing"
-                    style={{left: `${getThumbPosition()}%`}}
+                    className={`absolute w-6 h-6 hover:scale-[1.2] hover:border-3 transition-colors duration-200 border-2 border-white rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing`}
+                    style={{left: `${getThumbPosition()}%`, backgroundColor: currentColor?.hex || "#fff"}}
                 />
             </div>
         </div>

@@ -1,8 +1,9 @@
 import {HueBox} from "./hue-box.tsx";
-import {parseColor} from "../../utils/colorUtils.ts";
-import {Heart, History} from "lucide-react";
-import {ColorValue} from "../../types.ts";
+import {colorToValue, parseColor} from "../../utils/colorUtils.ts";
+import {ColorFormat, ColorValue} from "../../types.ts";
 import {ColorInput} from "../ColorInput.tsx";
+import {ColorSlider} from "./ColorSlider.tsx";
+import {BrightnessSlider} from "../BrightnessSlider.tsx";
 import FormatSelect from "../FormatSelect.tsx";
 
 type AdvancePickerProps = {
@@ -17,9 +18,9 @@ type AdvancePickerProps = {
     setCurrentHue: (hue: number) => void,
     theme?: 'light' | 'dark',
     showFormats?: boolean,
-    currentFormat?: string,
+    currentFormat?: ColorFormat,
     currentColorString?: string,
-    handleFormatChange?: (format: string) => void,
+    handleFormatChange?: (newFormat: ColorFormat) => void,
 }
 
 export default function AdvancePicker({
@@ -40,7 +41,7 @@ export default function AdvancePicker({
                                       }: AdvancePickerProps) {
     return (
         <div className='grid grid-cols-2 gap-10'>
-            <div>
+            <div className='order-0'>
                 <div className="mb-4">
                     <h4 className="text-sm font-medium mb-2 text-gray-600">Preset Colors</h4>
                     <div className="grid grid-cols-7 gap-2">
@@ -63,7 +64,6 @@ export default function AdvancePicker({
                     favoriteColors.length > 0 && (
                         <div>
                             <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
-                                <Heart size={14}/>
                                 Favorites
                             </h4>
                             <div className="flex flex-wrap gap-1">
@@ -86,7 +86,6 @@ export default function AdvancePicker({
                     colorHistory.length > 0 && (
                         <div>
                             <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
-                                <History size={14}/>
                                 Recent Colors
                             </h4>
                             <div className="flex flex-wrap gap-1">
@@ -104,30 +103,47 @@ export default function AdvancePicker({
                         </div>
                     )
                 }
+
+                {showFormats && (
+                    <div className='mt-5'>
+                        <FormatSelect currentFormat={currentFormat || 'hex'} handleFormatChange={handleFormatChange}
+                                      theme={theme}/>
+                    </div>
+                )}
+
             </div>
             <div>
                 <HueBox
                     color={currentColor}
                     onChange={handleColorChange}
                 />
-                <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        {showFormats && (
-                            <FormatSelect currentFormat={currentFormat} handleFormatChange={handleFormatChange}
-                                          theme={theme}/>
-                        )}
-                    </div>
 
-                    <ColorInput
-                        value={currentColorString}
-                        format={currentFormat}
-                        onChange={(colorString) => {
-                            const parsed = parseColor(colorString);
-                            if (parsed) handleColorChange(parsed);
-                        }}
-                        theme={theme}
-                    />
-                </div>
+                <ColorSlider hue={currentHue} onChange={setCurrentHue}/>
+
+                <BrightnessSlider
+                    type="alpha"
+                    value={currentColor.rgb.a || 1}
+                    color={currentColor}
+                    onChange={(alpha) => {
+                        const newColor = colorToValue(
+                            currentColor.rgb.r,
+                            currentColor.rgb.g,
+                            currentColor.rgb.b,
+                            alpha
+                        );
+                        handleColorChange(newColor);
+                    }}
+                />
+
+                <ColorInput
+                    value={currentColorString || ''}
+                    format={currentFormat || 'hex' as ColorFormat}
+                    onChange={(colorString) => {
+                        const parsed = parseColor(colorString);
+                        if (parsed) handleColorChange(parsed);
+                    }}
+                    theme={theme}
+                />
             </div>
         </div>
     );

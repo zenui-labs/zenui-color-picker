@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {ColorValue} from "../../types";
 import {colorToValue, hsvToRgb} from "../../utils/colorUtils";
 
@@ -18,6 +18,7 @@ export const HueBox: React.FC<HueBoxProps> = ({
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDraggingRef = useRef(false);
     const thumbYRef = useRef(height / 2);
+    const [newColor, setNewColor] = useState<ColorValue | null>(null);
 
     // Draw hue gradient box
     const drawHueBox = useCallback(() => {
@@ -26,10 +27,8 @@ export const HueBox: React.FC<HueBoxProps> = ({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Clear
         ctx.clearRect(0, 0, width, height);
 
-        // Horizontal hue gradient
         const hueGradient = ctx.createLinearGradient(0, 0, width, 0);
         for (let i = 0; i <= 360; i += 10) {
             const {r, g, b} = hsvToRgb(i, 100, 100);
@@ -44,9 +43,9 @@ export const HueBox: React.FC<HueBoxProps> = ({
 
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = newColor?.hex || "#fff";
         ctx.fill();
-        ctx.strokeStyle = "#333";
+        ctx.strokeStyle = "#fff";
         ctx.lineWidth = 2;
         ctx.stroke();
     }, [color, width, height]);
@@ -73,6 +72,7 @@ export const HueBox: React.FC<HueBoxProps> = ({
             const {r, g, b} = hsvToRgb(hue, 100, 100);
             const newColor = colorToValue(r, g, b, color.rgb.a);
             onChange(newColor);
+            setNewColor(newColor);
         },
         [color, onChange, width, height]
     );

@@ -4,7 +4,7 @@ import {ChevronDown} from "lucide-react";
 
 type FormatSelectProps = {
     currentFormat: ColorFormat;
-    handleFormatChange: (format: ColorFormat) => void;
+    handleFormatChange?: (newFormat: ColorFormat) => void;
     theme?: "light" | "dark";
 };
 
@@ -58,8 +58,10 @@ export default function FormatSelect({
               ${currentFormat === option ? "bg-[var(--brand-color)] text-white" : "hover:bg-[var(--brand-color)]/10"}
             `}
                         onClick={() => {
-                            handleFormatChange(option);
-                            setOpen(false);
+                            if (handleFormatChange) {
+                                handleFormatChange(option);
+                                setOpen(false);
+                            }
                         }}
                     >
                         {option.toUpperCase()}
