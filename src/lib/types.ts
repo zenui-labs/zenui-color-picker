@@ -26,7 +26,9 @@ export interface ColorPickerProps {
     variant?: 'wheel' | 'hue-slider' | 'advance' | 'hue-box';
     theme?: 'light' | 'dark';
     disabled?: boolean;
+    inline?: boolean;
     title?: string
+    popupStyle?: string;
     showAlpha?: boolean;
     showEyeDropper?: boolean;
     showHistory?: boolean;
@@ -35,7 +37,7 @@ export interface ColorPickerProps {
     presetColors?: string[];
     maxHistory?: number;
     className?: string;
-    style?: React.CSSProperties;
+    containerStyle?: React.CSSProperties;
     onChange?: (color: ColorValue, format: ColorFormat) => void;
     onFormatChange?: (format: ColorFormat) => void;
     onOpen?: () => void;

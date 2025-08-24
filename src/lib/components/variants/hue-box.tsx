@@ -2,105 +2,215 @@ import React, {useCallback, useEffect, useRef, useState} from "react";
 import {ColorValue} from "../../types";
 import {colorToValue, hsvToRgb} from "../../utils/colorUtils";
 
-interface HueBoxProps {
+interface SVBoxProps {
     color: ColorValue;
     onChange: (color: ColorValue) => void;
-    width?: number;
     height?: number;
 }
 
-export const HueBox: React.FC<HueBoxProps> = ({
-                                                  color,
-                                                  onChange,
-                                                  width = 280,
-                                                  height = 180,
-                                              }) => {
+export const HueBox: React.FC<SVBoxProps> = ({
+                                                 color,
+                                                 onChange,
+                                                 height = 180,
+                                             }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const isDraggingRef = useRef(false);
-    const thumbYRef = useRef(height / 2);
-    const [newColor, setNewColor] = useState<ColorValue | null>(null);
 
-    // Draw hue gradient box
-    const drawHueBox = useCallback(() => {
+    const [width, setWidth] = useState(0);
+
+    // --- Responsive width observer ---
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setWidth(entry.contentRect.width);
+            }
+        });
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    // --- Draw SV box ---
+    const drawSVBox = useCallback(() => {
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas || !width) return;
+
+        canvas.width = width;
+        canvas.height = height;
+
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        ctx.clearRect(0, 0, width, height);
-
-        const hueGradient = ctx.createLinearGradient(0, 0, width, 0);
-        for (let i = 0; i <= 360; i += 10) {
-            const {r, g, b} = hsvToRgb(i, 100, 100);
-            hueGradient.addColorStop(i / 360, `rgb(${r},${g},${b})`);
-        }
-        ctx.fillStyle = hueGradient;
+        // Fill with base hue
+        const hueColor = `hsl(${color.hsv.h}, 100%, 50%)`;
+        ctx.fillStyle = hueColor;
         ctx.fillRect(0, 0, width, height);
 
-        // Thumb position
-        const x = (color.hsv.h / 360) * width;
-        const y = thumbYRef.current;
+        // White overlay (saturation)
+        const whiteGradient = ctx.createLinearGradient(0, 0, width, 0);
+        whiteGradient.addColorStop(0, "#fff");
+        whiteGradient.addColorStop(1, "transparent");
+        ctx.fillStyle = whiteGradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // Black overlay (value)
+        const blackGradient = ctx.createLinearGradient(0, 0, 0, height);
+        blackGradient.addColorStop(0, "transparent");
+        blackGradient.addColorStop(1, "#000");
+        ctx.fillStyle = blackGradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // Thumb
+        const x = (color.hsv.s / 100) * width;
+        const y = height - (color.hsv.v / 100) * height;
 
         ctx.beginPath();
-        ctx.arc(x, y, 8, 0, 2 * Math.PI);
-        ctx.fillStyle = newColor?.hex || "#fff";
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+
+        // Shadow
+        ctx.shadowColor = "rgba(0,0,0,0.4)";
+        ctx.shadowBlur = 6;
+
+        ctx.fillStyle = color.hex;
         ctx.fill();
-        ctx.strokeStyle = "#fff";
+
+        // Reset shadow
+        ctx.shadowBlur = 0;
+
         ctx.lineWidth = 2;
+        ctx.strokeStyle = "#fff";
         ctx.stroke();
     }, [color, width, height]);
 
     useEffect(() => {
-        drawHueBox();
-    }, [drawHueBox]);
+        drawSVBox();
+    }, [drawSVBox]);
 
-    const handleMouseMove = useCallback(
-        (e: MouseEvent) => {
-            if (!isDraggingRef.current) return;
-            const canvas = canvasRef.current;
-            if (!canvas) return;
+    // --- Get coordinates from event ---
+    const getCoordinatesFromEvent = (e: MouseEvent | React.MouseEvent | WheelEvent) => {
+        if (!canvasRef.current) return null;
 
-            const rect = canvas.getBoundingClientRect();
-            const x = Math.max(0, Math.min(e.clientX - rect.left, width));
-            const y = Math.max(0, Math.min(e.clientY - rect.top, height));
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, width));
+        const y = Math.max(0, Math.min(e.clientY - rect.top, height));
 
-            thumbYRef.current = y; // store vertical thumb position
+        return {x, y};
+    };
 
-            let hue = (x / width) * 360;
-            hue = Math.max(0, Math.min(360, hue));
+    // --- Update color from coordinates ---
+    const updateColorFromCoordinates = (x: number, y: number) => {
+        const s = Math.max(0, Math.min(100, (x / width) * 100));
+        const v = Math.max(0, Math.min(100, 100 - (y / height) * 100));
 
-            const {r, g, b} = hsvToRgb(hue, 100, 100);
-            const newColor = colorToValue(r, g, b, color.rgb.a);
-            onChange(newColor);
-            setNewColor(newColor);
-        },
-        [color, onChange, width, height]
-    );
+        const {r, g, b} = hsvToRgb(color.hsv.h, s, v);
+        onChange(colorToValue(r, g, b, color.rgb.a));
+    };
 
-    const handleMouseUp = useCallback(() => {
-        isDraggingRef.current = false;
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-    }, [handleMouseMove]);
+    // --- Mouse handlers ---
+    const handleMove = (e: MouseEvent) => {
+        if (!isDraggingRef.current) return;
 
-    const handleMouseDown = useCallback(
-        (e: React.MouseEvent) => {
-            isDraggingRef.current = true;
-            document.addEventListener("mousemove", handleMouseMove);
-            document.addEventListener("mouseup", handleMouseUp);
-            handleMouseMove(e.nativeEvent);
-        },
-        [handleMouseMove, handleMouseUp]
-    );
+        const coords = getCoordinatesFromEvent(e);
+        if (coords) {
+            updateColorFromCoordinates(coords.x, coords.y);
+        }
+    };
+
+    const handleDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+
+        const coords = getCoordinatesFromEvent(e);
+        if (coords) {
+            updateColorFromCoordinates(coords.x, coords.y);
+        }
+
+        const handleUp = () => {
+            isDraggingRef.current = false;
+            document.removeEventListener("mousemove", handleMove);
+            document.removeEventListener("mouseup", handleUp);
+        };
+
+        document.addEventListener("mousemove", handleMove);
+        document.addEventListener("mouseup", handleUp);
+    };
+
+    // --- Wheel handler for smooth scrolling ---
+    const handleWheel = (e: React.WheelEvent) => {
+        e.preventDefault();
+
+        const coords = getCoordinatesFromEvent(e);
+        if (!coords) return;
+
+        // Determine scroll direction and sensitivity
+        const scrollSensitivity = 2;
+        const deltaY = e.deltaY;
+        const deltaX = e.deltaX;
+
+        let newS = color.hsv.s;
+        let newV = color.hsv.v;
+
+        // Vertical scrolling affects value (brightness)
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            newV = Math.max(0, Math.min(100, color.hsv.v - (deltaY / scrollSensitivity)));
+        }
+        // Horizontal scrolling affects saturation
+        else {
+            newS = Math.max(0, Math.min(100, color.hsv.s + (deltaX / scrollSensitivity)));
+        }
+
+        const {r, g, b} = hsvToRgb(color.hsv.h, newS, newV);
+        onChange(colorToValue(r, g, b, color.rgb.a));
+    };
+
+    // --- Keyboard support ---
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        const step = e.shiftKey ? 10 : 1;
+        let newS = color.hsv.s;
+        let newV = color.hsv.v;
+
+        switch (e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                newS = Math.max(0, color.hsv.s - step);
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                newS = Math.min(100, color.hsv.s + step);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                newV = Math.min(100, color.hsv.v + step);
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                newV = Math.max(0, color.hsv.v - step);
+                break;
+            default:
+                return;
+        }
+
+        const {r, g, b} = hsvToRgb(color.hsv.h, newS, newV);
+        onChange(colorToValue(r, g, b, color.rgb.a));
+    };
 
     return (
-        <canvas
-            ref={canvasRef}
-            width={width}
-            height={height}
-            onMouseDown={handleMouseDown}
-            className="cursor-crosshair rounded-lg mb-6"
-            style={{width, height}}
-        />
+        <div ref={containerRef} className="w-full relative mb-5">
+            <canvas
+                ref={canvasRef}
+                onMouseDown={handleDown}
+                onWheel={handleWheel}
+                onKeyDown={handleKeyDown}
+                tabIndex={0}
+                className="cursor-crosshair rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{display: "block", height}}
+                aria-label="Color saturation and value picker"
+                role="slider"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={color.hsv.s}
+            />
+        </div>
     );
 };

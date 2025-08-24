@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings, Palette, Code, Eye } from 'lucide-react';
+import React, {useState} from 'react';
+import {Code, Eye, Palette, Settings} from 'lucide-react';
 import {ColorPicker} from "../../lib";
 
 export const PlaygroundSection: React.FC = () => {
@@ -23,7 +23,7 @@ export const PlaygroundSection: React.FC = () => {
     };
 
     return (
-        <section className="py-20 bg-gray-50">
+        <section id='playground' className="py-20 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -39,7 +39,7 @@ export const PlaygroundSection: React.FC = () => {
                     <div className="space-y-6">
                         <div className="bg-white rounded-xl shadow-lg p-6">
                             <div className="flex items-center mb-4">
-                                <Settings className="w-5 h-5 text-blue-600 mr-2" />
+                                <Settings className="w-5 h-5 text-blue-600 mr-2"/>
                                 <h3 className="text-lg font-semibold text-gray-900">Configuration</h3>
                             </div>
 
@@ -91,14 +91,14 @@ export const PlaygroundSection: React.FC = () => {
 
                         <div className="bg-white rounded-xl shadow-lg p-6">
                             <div className="flex items-center mb-4">
-                                <Palette className="w-5 h-5 text-blue-600 mr-2" />
+                                <Palette className="w-5 h-5 text-blue-600 mr-2"/>
                                 <h3 className="text-lg font-semibold text-gray-900">Selected Color</h3>
                             </div>
 
                             <div className="flex items-center space-x-4">
                                 <div
                                     className="w-16 h-16 rounded-lg border-2 border-gray-200 shadow-inner"
-                                    style={{ backgroundColor: selectedColor }}
+                                    style={{backgroundColor: selectedColor}}
                                 />
                                 <div className="flex-1">
                                     <p className="text-sm text-gray-600">Current Color:</p>
@@ -110,14 +110,14 @@ export const PlaygroundSection: React.FC = () => {
                         <div className="bg-white rounded-xl shadow-lg p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center">
-                                    <Code className="w-5 h-5 text-blue-600 mr-2" />
+                                    <Code className="w-5 h-5 text-blue-600 mr-2"/>
                                     <h3 className="text-lg font-semibold text-gray-900">Generated Code</h3>
                                 </div>
                                 <button
                                     onClick={() => setShowCode(!showCode)}
                                     className="flex items-center px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 >
-                                    <Eye className="w-4 h-4 mr-1" />
+                                    <Eye className="w-4 h-4 mr-1"/>
                                     {showCode ? 'Hide' : 'Show'}
                                 </button>
                             </div>

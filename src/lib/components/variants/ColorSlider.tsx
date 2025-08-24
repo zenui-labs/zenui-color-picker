@@ -100,7 +100,7 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
 
     return (
         <div
-            className={`w-full ${className} mb-6`}
+            className={`w-full ${className} mb-4`}
         >
             <div
                 ref={sliderRef}

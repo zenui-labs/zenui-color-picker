@@ -12,8 +12,8 @@ import FormatSelect from "./FormatSelect.tsx";
 import AdvancePicker from "./variants/advance-picker.tsx";
 
 const defaultPresetColors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+    '#FF6B6B', '#4ECDC4', '#2300ff', '#96CEB4', '#FFEAA7',
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#006b85', '#85C1E9', '#C500ABFF'
 ];
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
@@ -29,8 +29,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             presetColors = defaultPresetColors,
                                                             maxHistory = 10,
                                                             className = '',
-                                                            style,
+                                                            containerStyle,
+                                                            popupStyle,
                                                             onChange,
+                                                            inline = false,
                                                             title = 'Color Picker',
                                                             enableHueSlider = false,
                                                             showPresets = true,
@@ -87,7 +89,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             }
         };
 
-        if (isOpen) {
+        if (isOpen && !inline) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
@@ -142,6 +144,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         }
     };
 
+    useEffect(() => {
+        setIsOpen(inline);
+    }, [inline]);
+
     const handleOpen = () => {
         if (disabled) return;
         setIsOpen(true);
@@ -193,10 +199,12 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
     const brandColorStyles = {
         '--brand-color': brandColor,
-        ...style
+        ...containerStyle
     };
 
     const getDropdownStyles = () => {
+        if (inline) return
+
         const baseStyles: React.CSSProperties = {
             position: 'absolute',
             zIndex: 2000000000000000,
@@ -225,27 +233,32 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
     return (
         <div className={`relative inline-block ${className}`} style={brandColorStyles}>
-            {/* Color Trigger */}
-            <button
-                ref={triggerRef}
-                onClick={handleOpen}
-                disabled={disabled}
-                className={`
+            {/* button */}
+            {
+                !inline && (
+                    <button
+                        ref={triggerRef}
+                        onClick={handleOpen}
+                        disabled={disabled}
+                        className={`
           w-12 h-12 rounded-lg border-2 border-gray-200 shadow-xs hover:shadow-md 
           transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
         `}
-                style={{backgroundColor: currentColor.hex}}
-                title={currentColorString}
-            />
+                        style={{backgroundColor: currentColor.hex}}
+                        title={currentColorString}
+                    />
+                )
+            }
 
-            {/* Color Picker Popover */}
+            {/* Popover */}
             {isOpen && (
                 <div
                     ref={popoverRef}
                     className={`
             p-4 rounded-xl shadow-2xl border backdrop-blur-xs
-            ${themeClasses}
+            ${themeClasses},
+            ${popupStyle}
             ${variant === 'advance' ? 'w-max' : 'w-80'}
           `}
                     style={getDropdownStyles()}
@@ -387,7 +400,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     {variant !== 'advance' && showPresets && presetColors.length > 0 && (
                         <div className="mb-4">
                             <h4 className="text-sm font-medium mb-2 text-gray-600">Preset Colors</h4>
-                            <div className="grid grid-cols-7 gap-2">
+                            <div className="flex items-center flex-wrap gap-2">
                                 {presetColors.map((color, index) => (
                                     <button
                                         key={index}
