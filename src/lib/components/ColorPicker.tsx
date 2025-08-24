@@ -62,7 +62,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     });
 
     const [copySuccess, setCopySuccess] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+    const [dropdownPositionY, setDropdownPositionY] = useState<'bottom' | 'top'>('bottom');
+    const [dropdownPositionX, setDropdownPositionX] = useState<'left' | 'right' | 'center'>('left');
+
     const popoverRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
     const [currentHue, setCurrentHue] = useState<number>(180);
@@ -101,11 +103,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         handleColorChange(newColor);
     }, [currentHue])
 
+
     const calculateDropdownPosition = () => {
         if (!triggerRef.current) return;
 
         const triggerRect = triggerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
 
         let estimatedHeight = 200;
         if (showAlpha) estimatedHeight += 50;
@@ -113,15 +117,28 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         if (showHistory && colorHistory.length > 0) estimatedHeight += 60;
         if (enableFavorite && favoriteColors.length > 0) estimatedHeight += 60;
 
+        const estimatedWidth = variant === 'advance' ? 420 : 320;
+
         const spaceBelow = viewportHeight - triggerRect.bottom - 10;
-        const spaceAbove = triggerRect.top - 10;
+        const spaceAbove = triggerRect.top - 30;
 
         if (spaceBelow >= estimatedHeight) {
-            setDropdownPosition('bottom');
+            setDropdownPositionY('bottom');
         } else if (spaceAbove >= estimatedHeight) {
-            setDropdownPosition('top');
+            setDropdownPositionY('top');
         } else {
-            setDropdownPosition(spaceBelow > spaceAbove ? 'bottom' : 'top');
+            setDropdownPositionY(spaceBelow > spaceAbove ? 'bottom' : 'top');
+        }
+
+        const spaceRight = viewportWidth - triggerRect.left;
+        const spaceLeft = triggerRect.right;
+
+        if (spaceRight >= estimatedWidth) {
+            setDropdownPositionX('left');
+        } else if (spaceLeft >= estimatedWidth) {
+            setDropdownPositionX('right');
+        } else {
+            setDropdownPositionX('center');
         }
     };
 
@@ -180,25 +197,30 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     };
 
     const getDropdownStyles = () => {
-        const baseStyles = {
-            position: 'absolute' as const,
+        const baseStyles: React.CSSProperties = {
+            position: 'absolute',
             zIndex: 2000000000000000,
-            left: 0,
         };
 
-        if (dropdownPosition === 'bottom') {
-            return {
-                ...baseStyles,
-                top: '100%',
-                marginTop: '8px',
-            };
+        if (dropdownPositionY === 'bottom') {
+            baseStyles.top = '100%';
+            baseStyles.marginTop = '20px';
         } else {
-            return {
-                ...baseStyles,
-                bottom: '100%',
-                marginBottom: '8px',
-            };
+            baseStyles.bottom = '100%';
+            baseStyles.marginBottom = '8px';
         }
+
+        if (!triggerRef.current) return baseStyles;
+        if (dropdownPositionX === 'left') {
+            baseStyles.left = 0;
+        } else if (dropdownPositionX === 'right') {
+            baseStyles.right = 0;
+        } else {
+            baseStyles.left = '50%';
+            baseStyles.transform = 'translateX(-50%)';
+        }
+
+        return baseStyles;
     };
 
     return (
