@@ -36,7 +36,7 @@ export default function FormatSelect({
                 onClick={() => setOpen((prev) => !prev)}
                 className={`w-full px-3 py-2 rounded-lg border text-sm flex justify-between items-center
           focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors
-          ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-200 text-black"}
+          ${theme === "dark" ? "bg-gray-800 border-gray-700 text-white" : "bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-black"}
         `}
             >
                 {currentFormat.toUpperCase()}
@@ -47,7 +47,7 @@ export default function FormatSelect({
             <ul
                 className={`
           absolute z-10 w-full mt-1 p-1.5 rounded-lg shadow-lg overflow-hidden
-          ${theme === "dark" ? "bg-gray-700" : "bg-white"}
+          ${theme === "dark" ? "bg-gray-800" : "bg-white dark:bg-gray-800"}
           ${open ? "animate-slideDown" : "hidden"}
         `}
             >

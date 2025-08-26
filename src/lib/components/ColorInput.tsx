@@ -73,9 +73,9 @@ export const ColorInput: React.FC<ColorInputProps> = ({
             onBlur={handleBlur}
             placeholder={placeholder}
             className={`
-        w-full px-3 py-2 rounded-lg border text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors
-        ${isValid
-                ? (theme === 'dark' ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900')
+                w-full px-3 py-2 rounded-lg border text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors
+            ${isValid
+                ? (theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-gray-900')
                 : 'border-red-300 bg-red-50 text-red-900'
             }
       `}

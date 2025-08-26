@@ -1,8 +1,25 @@
 const Footer = () => {
     return (
-        <footer className="text-center py-8">
-            <p className='text-sm text-gray-500'>A Product of <a href='https://zenui.net'
-                                                                 className='underline font-medium'>@ZenUI_Labs</a></p>
+        <footer className="py-6 px-6 dark:bg-darkBg md:px-4 relative mx-auto">
+
+            <div
+                style={{
+                    background: 'radial-gradient(ellipse 90% 100% at 50% 100%,rgb(0, 170, 69, 0.2) 0%,transparent 100%)'
+                }}
+                className="absolute inset-0 z-10 pointer-events-none dark:[background:radial-gradient(ellipse_70%_60%_at_50%_100%,rgba(0,173,149,0.08)_0%,transparent_100%)]"
+            ></div>
+
+            <p
+                className="text-[0.9rem] text-center text-gray-600 dark:text-gray-400"
+            >
+                A product of {' '}
+                <a
+                    href="https://zenui.net"
+                    target="_blank"
+                    className="text-brandColor underline"
+                >@zenui</a
+                >
+            </p>
         </footer>
     );
 };

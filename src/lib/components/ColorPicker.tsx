@@ -193,7 +193,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
     const themeClasses = theme === 'dark'
         ? 'bg-gray-800 text-white border-gray-600'
-        : 'bg-white text-gray-900 border-gray-200';
+        : 'bg-white text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-white border-gray-200';
 
     const currentColorString = formatColorValue(currentColor, currentFormat);
 
@@ -271,12 +271,12 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                 <button
                                     onClick={handleCopy}
                                     className={`
-                    p-2 rounded-lg transition-colors duration-200 cursor-pointer
-                    ${copySuccess
+                                        p-2 rounded-lg transition-colors duration-200 cursor-pointer
+                                        ${copySuccess
                                         ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
-                                        : 'hover:bg-gray-100 text-gray-600'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-600'
                                     }
-                  `}
+                            `}
                                     title={copySuccess ? 'Copied!' : 'Copy color'}
                                 >
                                     {
@@ -408,7 +408,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                             const parsed = parseColor(color);
                                             if (parsed) handleColorChange(parsed);
                                         }}
-                                        className="w-8 h-8 rounded-lg cursor-pointer border border-gray-200 hover:scale-110 transition-transform duration-200"
+                                        className="w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200"
                                         style={{backgroundColor: color}}
                                         title={color}
                                     />
