@@ -306,6 +306,7 @@ export const Playground = () => {
                                     Code</h3>
                             </div>
                             <button
+                                type='button'
                                 onClick={() => setShowCode(!showCode)}
                                 className="flex items-center px-3 py-1 text-sm text-blue-600 dark:hover:bg-gray-800 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors"
                             >

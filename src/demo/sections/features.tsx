@@ -21,7 +21,7 @@ export const FeaturesSection: React.FC = () => {
         {
             icon: <Code2 className="w-6 h-6"/>,
             title: 'Framework Agnostic',
-            description: 'Works seamlessly with React, Next.js, Vue.js, and vanilla JavaScript.'
+            description: 'Works seamlessly with React, Next.js, Vue.js'
         },
         {
             icon: <Shield className="w-6 h-6"/>,
@@ -78,10 +78,12 @@ export const FeaturesSection: React.FC = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
+                        type='button'
                         className="px-8 cursor-pointer py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                         View Documentation
                     </button>
                     <button
+                        type='button'
                         className="px-8 cursor-pointer dark:border-darkBorder dark:text-darkText dark:hover:bg-gray-800 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
                         Browse Examples
                     </button>

@@ -1,5 +1,6 @@
 import {Github, Moon, Sun} from "lucide-react";
 import {useEffect, useState} from "react";
+import Logo from "../../assets/logo.png"
 
 const Navbar = () => {
     const [theme, setTheme] = useState<string>(
@@ -21,12 +22,11 @@ const Navbar = () => {
 
     return (
         <header
-            className="fixed top-0 left-0  dark:border-darkBorder right-0 backdrop-blur-lg border-b border-gray-200 z-50">
+            className="fixed top-0 left-0  dark:border-darkBorder right-0 py-0.5 backdrop-blur-lg border-b border-gray-200 z-50">
             <div className="max-w-[1200px] mx-auto">
                 <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center">
-                        <div
-                            className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mr-3"></div>
+                    <div className="flex items-center gap-1">
+                        <img src={Logo} alt="color picker logo" className="w-[3.3rem]"/>
                         <h1 className="text-xl font-bold dark:text-darkText text-gray-900">ColorPicker</h1>
                     </div>
 
@@ -43,6 +43,7 @@ const Navbar = () => {
                         <a
                             className='hover:text-accent transition-all duration-300'
                             href='https://github.com/zenui-labs/zenui-color-picker'
+                            target='_blank'
                         >
                             <Github className="size-5.5"/>
                         </a>

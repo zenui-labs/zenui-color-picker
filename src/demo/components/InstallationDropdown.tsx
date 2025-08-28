@@ -85,6 +85,7 @@ export default {
                             {installations[selectedFramework].npm}
                         </code>
                         <button
+                            type='button'
                             onClick={() => copyToClipboard(installations[selectedFramework].npm)}
                             className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white transition-colors"
                         >
@@ -100,6 +101,7 @@ export default {
               {installations[selectedFramework].usage}
             </pre>
                         <button
+                            type='button'
                             onClick={() => copyToClipboard(installations[selectedFramework].usage)}
                             className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white transition-colors"
                         >

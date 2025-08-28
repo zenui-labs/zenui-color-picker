@@ -47,6 +47,7 @@ export default function AdvancePicker({
                     <div className="grid grid-cols-7 gap-2">
                         {presetColors.map((color, index) => (
                             <button
+                                type='button'
                                 key={index}
                                 onClick={() => {
                                     const parsed = parseColor(color);
@@ -69,6 +70,7 @@ export default function AdvancePicker({
                             <div className="flex flex-wrap gap-1">
                                 {favoriteColors.map((color, index) => (
                                     <button
+                                        type='button'
                                         key={index}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => removeFromFavorites(color)}
@@ -91,6 +93,7 @@ export default function AdvancePicker({
                             <div className="flex flex-wrap gap-1">
                                 {colorHistory.slice(0, 10).map((color, index) => (
                                     <button
+                                        type='button'
                                         key={index}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => addToFavorites(color)}

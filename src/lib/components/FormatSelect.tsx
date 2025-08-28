@@ -41,7 +41,7 @@ export default function FormatSelect({
             >
                 {currentFormat.toUpperCase()}
                 <ChevronDown size={20}
-                             className={`transition-all text-gray-500 duration-200 ${open ? "rotate-180" : "rotate-0"}`}/>
+                             className={`transition-all ${theme === 'dark' ? 'text-gray-200' : 'text-gray-500'}  duration-200 ${open ? "rotate-180" : "rotate-0"}`}/>
             </button>
 
             <ul
