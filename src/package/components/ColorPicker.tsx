@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Check, Copy, Heart, RotateCcw} from 'lucide-react';
+import {Heart, RotateCcw} from 'lucide-react';
 import {ColorFormat, ColorPickerProps, ColorValue} from '../types';
 import {colorToValue, formatColorValue, hsvToRgb, parseColor} from '../utils/colorUtils';
 import {useColorPicker} from '../hooks/useColorPicker';
@@ -24,11 +24,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             disabled = false,
                                                             showAlpha = true,
                                                             showHistory = true,
+                                                            showTitle = true,
                                                             showFormats = true,
                                                             showCopyButton = true,
                                                             presetColors = defaultPresetColors,
                                                             maxHistory = 10,
                                                             className = '',
+                                                            showColorInput = true,
                                                             containerStyle,
                                                             popupStyle,
                                                             onChange,
@@ -54,7 +56,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         setIsOpen,
         addToFavorites,
         removeFromFavorites,
-        copyToClipboard,
         generateRandomColor
     } = useColorPicker({
         initialColor: value,
@@ -63,7 +64,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         maxHistory
     });
 
-    const [copySuccess, setCopySuccess] = useState(false);
     const [dropdownPositionY, setDropdownPositionY] = useState<'bottom' | 'top'>('bottom');
     const [dropdownPositionX, setDropdownPositionX] = useState<'left' | 'right' | 'center'>('left');
 
@@ -161,6 +161,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     };
 
     const handleColorChange = (color: ColorValue) => {
+        if (disabled) return;
         updateColor(color);
         setCurrentHue(color.hsv.h);
         onChange?.(color, currentFormat);
@@ -169,15 +170,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     const handleFormatChange = (newFormat: ColorFormat) => {
         updateFormat(newFormat);
         onFormatChange?.(newFormat);
-    };
-
-    const handleCopy = async () => {
-        const colorString = formatColorValue(currentColor, currentFormat);
-        const success = await copyToClipboard(colorString);
-        if (success) {
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-        }
     };
 
     useEffect(() => {
@@ -192,7 +184,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     }, [isOpen]);
 
     const themeClasses = theme === 'dark'
-        ? 'bg-gray-800 text-white border-gray-600'
+        ? 'bg-gray-900 text-white border-gray-600'
         : 'bg-white text-gray-900 dark:bg-gray-900 dark:border-gray-700 dark:text-white border-gray-200';
 
     const currentColorString = formatColorValue(currentColor, currentFormat);
@@ -242,8 +234,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         onClick={handleOpen}
                         disabled={disabled}
                         className={`
-          w-12 h-12 rounded-lg border-2 border-gray-200 shadow-xs hover:shadow-md 
-          transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          w-12 h-12 rounded-lg border-2 border-gray-200 dark:border-gray-600 shadow-xs hover:shadow-md 
+          transition-all duration-200 focus:outline-hidden focus:ring-2 focus:ring-[var(--brand-color)]
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
         `}
                         style={{backgroundColor: currentColor.hex}}
@@ -258,30 +250,41 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     ref={popoverRef}
                     className={`
             p-4 rounded-xl shadow-2xl border backdrop-blur-xs
-            ${themeClasses},
+            ${themeClasses}
+            ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-default'}
             ${popupStyle}
             ${variant === 'advance' ? 'w-max' : 'w-80'}
           `}
                     style={getDropdownStyles()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">{title}</h3>
-                        <div className="flex items-center gap-2">
-                            {
-                                enableShuffle && (
-                                    <button
-                                        type='button'
-                                        onClick={generateRandomColor}
-                                        className={`${theme === 'dark' ? 'hover:bg-gray-600 text-gray-200': 'hover:bg-gray-100 text-gray-600'} p-2 rounded-lg transition-colors group cursor-pointer duration-200`}
-                                        title="Generate random color"
-                                    >
-                                        <RotateCcw size={16} className='group-hover:rotate-[-90deg] transition-all duration-200'/>
-                                    </button>
-                                )
-                            }
-                        </div>
-                    </div>
+                    {
+                        (showTitle || enableShuffle) && (
+                            <div className="flex items-center justify-between mb-4">
+                                {
+                                    showTitle && (
+                                        <h3 className="text-lg font-semibold">{title}</h3>
+                                    )
+                                }
+                                <div className="flex items-center gap-2">
+                                    {
+                                        enableShuffle && (
+                                            <button
+                                                disabled={disabled}
+                                                type='button'
+                                                onClick={generateRandomColor}
+                                                className={`${theme === 'dark' ? 'hover:bg-gray-600 text-gray-200' : 'hover:bg-gray-100 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:hover:bg-gray-600 dark:text-gray-200 text-gray-600'} p-2 rounded-lg transition-colors group cursor-pointer duration-200`}
+                                                title="Generate random color"
+                                            >
+                                                <RotateCcw size={16}
+                                                           className='group-hover:rotate-[-90deg] transition-all duration-200'/>
+                                            </button>
+                                        )
+                                    }
+                                </div>
+                            </div>
+                        )
+                    }
 
                     {
                         variant === 'wheel' && (
@@ -308,6 +311,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         (variant === 'hue-slider' || enableHueSlider) && variant !== 'advance' && (
                             <ColorSlider
                                 hue={currentHue}
+                                disabled={disabled}
                                 onChange={setCurrentHue}
                             />
                         )
@@ -337,7 +341,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     {variant !== 'advance' && showAlpha && (
                         <div className="mb-4">
                             <BrightnessSlider
-                                type="alpha"
                                 value={currentColor.rgb.a || 1}
                                 color={currentColor}
                                 onChange={(alpha) => {
@@ -353,69 +356,53 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         </div>
                     )}
 
-                    {/* Format Selector & Input */}
+                    {/* Format Selector */}
                     {
                         variant !== 'advance' && showFormats && (
-                            <div className="mb-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    {showFormats && (
-                                        <FormatSelect currentFormat={currentFormat} handleFormatChange={handleFormatChange}
-                                                      theme={theme}/>
-                                    )}
-                                </div>
+                            <div className="mt-4">
+                                {showFormats && (
+                                    <FormatSelect disabled={disabled} currentFormat={currentFormat}
+                                                  handleFormatChange={handleFormatChange}
+                                                  theme={theme}/>
+                                )}
+                            </div>
+                        )
+                    }
 
-                                <div className='relative'>
-                                    <ColorInput
-                                        value={currentColorString}
-                                        format={currentFormat}
-                                        onChange={(colorString) => {
-                                            const parsed = parseColor(colorString);
-                                            if (parsed) handleColorChange(parsed);
-                                        }}
-                                        theme={theme}
-                                    />
-                                    {showCopyButton && (
-                                        <button
-                                            type='button'
-                                            onClick={handleCopy}
-                                            className={`
-                                        p-2 rounded-lg transition-colors absolute top-1/2 -translate-y-1/2 right-0.5 duration-200 cursor-pointer
-                                        ${theme === 'dark' && 'hover:bg-gray-700 text-white'}
-                                        ${copySuccess
-                                                ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
-                                                : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-600'
-                                            }
-                            `}
-                                            title={copySuccess ? 'Copied!' : 'Copy color'}
-                                        >
-                                            {
-                                                copySuccess ? (
-                                                    <Check size={16}/>
-                                                ) : (
-                                                    <Copy size={16}/>
-                                                )
-                                            }
-                                        </button>
-                                    )}
-                                </div>
+                    {
+                        variant !== 'advance' && showColorInput && (
+                            <div className="mt-4 relative">
+                                <ColorInput
+                                    value={currentColorString}
+                                    format={currentFormat}
+                                    disabled={disabled}
+                                    onChange={(colorString) => {
+                                        const parsed = parseColor(colorString);
+                                        if (parsed) handleColorChange(parsed);
+                                    }}
+                                    showCopyButton={showCopyButton}
+                                    theme={theme}
+                                />
                             </div>
                         )
                     }
 
                     {/* Preset Colors */}
                     {variant !== 'advance' && showPresets && presetColors.length > 0 && (
-                        <div className="mb-4">
-                            <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600'} text-sm font-medium mb-2`}>Preset Colors</h4>
+                        <div className="mt-3">
+                            <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600 dark:text-gray-100'} text-sm font-medium mb-2`}>Preset
+                                Colors</h4>
                             <div className="flex items-center flex-wrap gap-2">
                                 {presetColors.map((color, index) => (
                                     <button
                                         type='button'
                                         key={index}
+                                        disabled={disabled}
                                         onClick={() => {
                                             const parsed = parseColor(color);
                                             if (parsed) handleColorChange(parsed);
                                         }}
-                                        className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200`}
+                                        className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'} disabled:cursor-not-allowed w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200`}
                                         style={{backgroundColor: color}}
                                         title={color}
                                     />
@@ -424,11 +411,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         </div>
                     )}
 
-                    {/* History & Favorites */}
+                    {/* History */}
                     {
                         variant !== 'advance' && showHistory && colorHistory.length > 0 && (
-                            <div>
-                                <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600'} text-sm font-medium mb-2 flex items-center gap-1`}>
+                            <div className='mt-3'>
+                                <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600 dark:text-gray-100'} text-sm font-medium mb-2 flex items-center gap-1`}>
                                     Recent Colors
                                 </h4>
                                 <div className="flex flex-wrap gap-1">
@@ -436,9 +423,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         <button
                                             type='button'
                                             key={index}
+                                            disabled={disabled}
                                             onClick={() => handleColorChange(color)}
                                             onDoubleClick={() => addToFavorites(color)}
-                                            className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} w-6 h-6 rounded-sm border hover:scale-110 transition-transform duration-200`}
+                                            className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'} disabled:cursor-not-allowed w-6 h-6 rounded-sm border hover:scale-110 transition-transform duration-200`}
                                             style={{backgroundColor: color.hex}}
                                             title={`${color.hex} (double-click to favorite)`}
                                         />
@@ -450,8 +438,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
                     {
                         variant !== 'advance' && enableFavorite && favoriteColors.length > 0 && (
-                            <div>
-                                <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600'} text-sm font-medium mb-2 mt-4 gap-1`}>
+                            <div className='mt-3'>
+                                <h4 className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-600 dark:text-gray-100'} text-sm font-medium mb-2 mt-4 gap-1`}>
                                     Favorites
                                 </h4>
                                 <div className="flex flex-wrap gap-1">
@@ -459,9 +447,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         <button
                                             type='button'
                                             key={index}
+                                            disabled={disabled}
                                             onClick={() => handleColorChange(color)}
                                             onDoubleClick={() => removeFromFavorites(color)}
-                                            className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} w-6 h-6 rounded-sm border border-gray-200 hover:scale-110 transition-transform duration-200`}
+                                            className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'} w-6 h-6 rounded-sm border border-gray-200 hover:scale-110 disabled:cursor-not-allowed transition-transform duration-200`}
                                             style={{backgroundColor: color.hex}}
                                             title={`${color.hex} (double-click to remove)`}
                                         />
@@ -474,20 +463,25 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     {/* Current Color Display */}
                     {
                         variant !== 'advance' && enableFavorite && (
-                            <div className={`${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'} mt-4 pt-4 border-t`}>
+                            <div
+                                className={`${theme === 'dark' ? 'border-gray-600' : 'border-gray-200 dark:border-gray-600'} mt-4 pt-4 border-t`}>
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} w-8 h-8 rounded-lg border`}
+                                        className={`${theme === 'dark' ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'} w-8 h-8 rounded-lg border`}
                                         style={{backgroundColor: currentColor.hex}}
                                     />
                                     <div className="flex-1">
                                         <div className="text-sm font-medium">{currentColorString}</div>
-                                        <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} text-xs`}>Current Color</div>
+                                        <div
+                                            className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-500 dark:text-gray-300'} text-xs`}>Current
+                                            Color
+                                        </div>
                                     </div>
                                     <button
+                                        disabled={disabled}
                                         type='button'
                                         onClick={() => addToFavorites(currentColor)}
-                                        className={`${theme === 'dark' ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-400 hover:bg-gray-100'} p-1 rounded-sm transition-colors cursor-pointer duration-200`}
+                                        className={`${theme === 'dark' ? 'text-gray-200 hover:bg-gray-600' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-gray-200'} p-1 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-sm transition-colors cursor-pointer duration-200`}
                                         title="Add to favorites"
                                     >
                                         <Heart size={16}/>

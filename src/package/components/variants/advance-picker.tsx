@@ -43,8 +43,8 @@ export default function AdvancePicker({
         <div className='grid grid-cols-2 gap-10'>
             <div className='order-0'>
                 <div className="mb-4">
-                    <h4 className="text-sm font-medium mb-2 text-gray-600">Preset Colors</h4>
-                    <div className="grid grid-cols-7 gap-2">
+                    <h4 className="text-sm dark:text-gray-200 font-medium mb-2 text-gray-600">Preset Colors</h4>
+                    <div className="grid grid-cols-9 gap-2">
                         {presetColors.map((color, index) => (
                             <button
                                 type='button'
@@ -53,7 +53,7 @@ export default function AdvancePicker({
                                     const parsed = parseColor(color);
                                     if (parsed) handleColorChange(parsed);
                                 }}
-                                className="w-8 h-8 rounded-lg cursor-pointer border border-gray-200 hover:scale-110 transition-transform duration-200"
+                                className="w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200"
                                 style={{backgroundColor: color}}
                                 title={color}
                             />
@@ -64,7 +64,7 @@ export default function AdvancePicker({
                 {
                     favoriteColors.length > 0 && (
                         <div>
-                            <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
+                            <h4 className="text-sm dark:text-gray-200 font-medium mb-2 text-gray-600 flex items-center gap-1">
                                 Favorites
                             </h4>
                             <div className="flex flex-wrap gap-1">
@@ -74,7 +74,7 @@ export default function AdvancePicker({
                                         key={index}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => removeFromFavorites(color)}
-                                        className="w-6 h-6 rounded-sm border border-gray-200 hover:scale-110 transition-transform duration-200"
+                                        className="w-6 h-6 rounded-sm border cursor-pointer dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200"
                                         style={{backgroundColor: color.hex}}
                                         title={`${color.hex} (double-click to remove)`}
                                     />
@@ -87,7 +87,7 @@ export default function AdvancePicker({
                 {
                     colorHistory.length > 0 && (
                         <div>
-                            <h4 className="text-sm font-medium mb-2 text-gray-600 flex items-center gap-1">
+                            <h4 className="text-sm font-medium my-3 text-gray-600 dark:text-gray-200 flex items-center gap-1">
                                 Recent Colors
                             </h4>
                             <div className="flex flex-wrap gap-1">
@@ -97,7 +97,7 @@ export default function AdvancePicker({
                                         key={index}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => addToFavorites(color)}
-                                        className="w-6 h-6 rounded-sm border border-gray-200 hover:scale-110 transition-transform duration-200"
+                                        className="w-6 h-6 rounded-sm border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform cursor-pointer duration-200"
                                         style={{backgroundColor: color.hex}}
                                         title={`${color.hex} (double-click to favorite)`}
                                     />

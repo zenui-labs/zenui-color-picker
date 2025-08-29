@@ -8,6 +8,7 @@ interface ColorSliderProps {
     width?: number;
     height?: number;
     className?: string;
+    disabled?: boolean;
 }
 
 export const ColorSlider: React.FC<ColorSliderProps> = ({
@@ -15,6 +16,7 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
                                                             onChange,
                                                             width = 400,
                                                             height = 16,
+                                                            disabled,
                                                             className = ""
                                                         }) => {
     const sliderRef = useRef<HTMLDivElement>(null);
@@ -40,7 +42,9 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
 
         const rect = slider.getBoundingClientRect();
         const normalizedX = Math.max(0, Math.min(rect.width, x));
-        return (normalizedX / rect.width) * 360;
+        // Prevent hue from reaching exactly 360 to avoid the wrap-around issue
+        const percentage = normalizedX / rect.width;
+        return Math.min(359, percentage * 360);
     }, [hue]);
 
     const getThumbPosition = () => {
@@ -85,6 +89,8 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
     }, [handleMouseMove]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        if (disabled) return;
+
         isDraggingRef.current = true;
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);

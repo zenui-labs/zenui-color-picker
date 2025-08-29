@@ -2,14 +2,12 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ColorValue} from '../types';
 
 interface ColorSliderProps {
-    type: 'hue' | 'saturation' | 'brightness' | 'alpha';
     value: number;
     color: ColorValue;
     onChange: (value: number) => void;
 }
 
 export const BrightnessSlider: React.FC<ColorSliderProps> = ({
-                                                                 type,
                                                                  value,
                                                                  color,
                                                                  onChange
@@ -25,24 +23,8 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
         const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
         const percentage = x / rect.width;
 
-        let newValue: number;
-        switch (type) {
-            case 'hue':
-                newValue = percentage * 360;
-                break;
-            case 'saturation':
-            case 'brightness':
-                newValue = percentage * 100;
-                break;
-            case 'alpha':
-                newValue = percentage;
-                break;
-            default:
-                newValue = percentage;
-        }
-
-        onChange(newValue);
-    }, [onChange, type]);
+        onChange(Math.max(0, Math.min(1, percentage)));
+    }, [onChange]);
 
     useEffect(() => {
         setCurrentColor(color);
@@ -60,24 +42,7 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
     }, [handleMouseMove, handleMouseUp]);
 
     const getThumbPosition = () => {
-        let percentage: number;
-
-        switch (type) {
-            case 'hue':
-                percentage = value / 360;
-                break;
-            case 'saturation':
-            case 'brightness':
-                percentage = value / 100;
-                break;
-            case 'alpha':
-                percentage = value;
-                break;
-            default:
-                percentage = 0;
-        }
-
-        percentage = Math.max(0, Math.min(1, percentage));
+        const percentage = Math.max(0, Math.min(1, value));
 
         const thumbRadius = 12;
         const thumbWidthPercentage = (thumbRadius / (sliderRef.current?.offsetWidth || 200)) * 100;
@@ -89,41 +54,15 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
     };
 
     const getBackgroundStyle = () => {
-        switch (type) {
-            case "hue":
-                return {
-                    backgroundImage:
-                        "linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)",
-                };
-            case "saturation":
-                return {
-                    backgroundImage: `linear-gradient(to right, hsl(${color.hsv.h}, 0%, ${color.hsv.v}%), hsl(${color.hsv.h}, 100%, ${color.hsv.v}%))`,
-                };
-            case "brightness":
-                return {
-                    backgroundImage: `linear-gradient(to right, hsl(${color.hsv.h}, ${color.hsv.s}%, 0%), hsl(${color.hsv.h}, ${color.hsv.s}%, 100%))`,
-                };
-            case "alpha":
-                const solidColor = color.hex.length === 9 ? color.hex.substring(0, 7) : color.hex;
-                return {
-                    backgroundImage: `linear-gradient(to right, transparent, ${solidColor})`,
-                };
-            default:
-                return {};
+        const solidColor = color.hex.length === 9 ? color.hex.substring(0, 7) : color.hex;
+        return {
+            backgroundImage: `linear-gradient(to right, transparent, ${solidColor})`,
         }
     };
 
     const getThumbColor = () => {
         if (!currentColor) return "#fff";
-
-        switch (type) {
-            case "alpha":
-                return `hsl(${currentColor.hsv.h}, ${currentColor.hsv.s}%, 50%)`;
-            case "saturation":
-                return `hsl(${currentColor.hsv.h}, 100%, ${currentColor.hsv.v}%)`;
-            default:
-                return currentColor.hex;
-        }
+        return `hsl(${currentColor.hsv.h}, ${currentColor.hsv.s}%, 50%)`;
     };
 
 

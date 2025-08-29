@@ -18,6 +18,8 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/lib/**/*"],
+  "include": [
+    "src/package/**/*"
+  ],
   "exclude": ["src/demo/**/*", "**/*.test.*"]
 }

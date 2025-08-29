@@ -1,6 +1,6 @@
 import {ArrowRight, Check, Copy, Github} from "lucide-react"
 import {useState} from "react"
-import {ColorPicker} from "../../lib";
+import {ColorPicker} from "../../package";
 
 const Hero = () => {
     const [copied, setCopied] = useState(false)

@@ -1,5 +1,7 @@
 import {Github, Moon, Sun} from "lucide-react";
 import {useEffect, useState} from "react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import Logo from "../../assets/logo.png"
 
 const Navbar = () => {
@@ -26,7 +28,7 @@ const Navbar = () => {
             <div className="max-w-[1200px] mx-auto">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-1">
-                        <img src={Logo} alt="color picker logo" className="w-[3.3rem]"/>
+                        <img src={Logo} alt="color picker logo" className="w-[3.2rem]"/>
                         <h1 className="text-xl font-bold dark:text-darkText text-gray-900">ColorPicker</h1>
                     </div>
 

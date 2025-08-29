@@ -1,4 +1,6 @@
 export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk';
+export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'advance' | 'hue-box'
+export type Themes = 'light' | 'dark';
 
 export interface ColorValue {
     hex: string;
@@ -23,14 +25,15 @@ export interface ColorPickerTheme {
 export interface ColorPickerProps {
     value?: string;
     format?: ColorFormat;
-    variant?: 'wheel' | 'hue-slider' | 'advance' | 'hue-box';
-    theme?: 'light' | 'dark';
+    variant?: ColorPickerVariant;
+    theme?: Themes;
     disabled?: boolean;
     inline?: boolean;
+    showColorInput?: boolean;
+    showTitle?: boolean;
     title?: string
     popupStyle?: string;
     showAlpha?: boolean;
-    showEyeDropper?: boolean;
     showHistory?: boolean;
     showFormats?: boolean;
     showCopyButton?: boolean;
