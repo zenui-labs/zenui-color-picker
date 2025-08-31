@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {ColorFormat} from '../types';
 import {useColorPicker} from "../hooks/useColorPicker.ts";
 import {Check, Copy} from "lucide-react";
+import {clsx} from "clsx";
 
 interface ColorInputProps {
     value: string;
@@ -93,27 +94,23 @@ export const ColorInput: React.FC<ColorInputProps> = ({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder={placeholder}
-                className={`
-                w-full px-3 py-2 rounded-lg disabled:cursor-not-allowed border text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors
-            ${isValid
-                    ? (theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-gray-900')
-                    : 'border-red-300 bg-red-50 text-red-900 dark:!ring-red-500/20 dark:bg-red-500/20 dark:text-red-100'
-                }
-      `}
+                className={clsx(
+                    'w-full px-3 py-2 rounded-lg disabled:cursor-not-allowed border text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors',
+                    isValid ? theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-gray-900'
+                        : 'border-red-300 bg-red-50 text-red-900 dark:!ring-red-500/20 dark:bg-red-500/20 dark:text-red-100'
+                )}
             />
             {showCopyButton && (
                 <button
                     type='button'
                     disabled={disabled}
                     onClick={handleCopy}
-                    className={`
-                                        p-2 rounded-lg disabled:cursor-not-allowed transition-colors absolute top-1/2 -translate-y-1/2 right-0.5 duration-200 cursor-pointer
-                                        ${theme === 'dark' && 'hover:bg-gray-700 text-white'}
-                                        ${copySuccess
-                        ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-600'
-                    }
-                            `}
+                    className={clsx(
+                        'p-2 rounded-lg disabled:cursor-not-allowed transition-colors absolute top-1/2 -translate-y-1/2 right-0.5 duration-200 cursor-pointer',
+                        theme === 'dark' && 'hover:bg-gray-700 text-white',
+                        copySuccess ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-600'
+                    )}
                     title={copySuccess ? 'Copied!' : 'Copy color'}
                 >
                     {

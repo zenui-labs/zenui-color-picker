@@ -1,11 +1,11 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {colorToValue, hsvToRgb} from "../../utils/colorUtils.ts";
 import {ColorValue} from "../../types.ts";
+import {clsx} from "clsx";
 
 interface ColorSliderProps {
     hue: number;
     onChange: (hue: number) => void;
-    width?: number;
     height?: number;
     className?: string;
     disabled?: boolean;
@@ -14,27 +14,13 @@ interface ColorSliderProps {
 export const ColorSlider: React.FC<ColorSliderProps> = ({
                                                             hue,
                                                             onChange,
-                                                            width = 400,
                                                             height = 16,
                                                             disabled,
                                                             className = ""
                                                         }) => {
     const sliderRef = useRef<HTMLDivElement>(null);
     const isDraggingRef = useRef(false);
-    const [containerWidth, setContainerWidth] = useState(width);
     const [currentColor, setCurrentColor] = useState<ColorValue | null>(null);
-
-    useEffect(() => {
-        const updateWidth = () => {
-            if (sliderRef.current) {
-                setContainerWidth(sliderRef.current.offsetWidth);
-            }
-        };
-
-        updateWidth();
-        window.addEventListener('resize', updateWidth);
-        return () => window.removeEventListener('resize', updateWidth);
-    }, []);
 
     const getHueFromPosition = useCallback((x: number) => {
         const slider = sliderRef.current;
@@ -42,29 +28,38 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
 
         const rect = slider.getBoundingClientRect();
         const normalizedX = Math.max(0, Math.min(rect.width, x));
-        // Prevent hue from reaching exactly 360 to avoid the wrap-around issue
         const percentage = normalizedX / rect.width;
-        return Math.min(359, percentage * 360);
+
+        const calculatedHue = percentage * 359;
+        return Math.max(0, Math.min(359, Math.round(calculatedHue)));
     }, [hue]);
 
-    const getThumbPosition = () => {
-        const percentage = hue / 360;
+    const getThumbPosition = useCallback(() => {
+        const slider = sliderRef.current;
+        if (!slider) return (hue / 359) * 100;
+
+        const rect = slider.getBoundingClientRect();
+        const sliderWidth = rect.width;
+
+        if (sliderWidth === 0) return (hue / 359) * 100;
+
+        const percentage = (hue / 359) * 100;
+
         const thumbRadius = 12;
-        const thumbWidthPercentage = (thumbRadius / containerWidth) * 100;
+        const thumbWidthPercentage = (thumbRadius / sliderWidth) * 100;
 
         const minPosition = thumbWidthPercentage;
         const maxPosition = 100 - thumbWidthPercentage;
 
-        return minPosition + (percentage * (maxPosition - minPosition));
-    };
+        const adjustedPercentage = minPosition + ((percentage / 100) * (maxPosition - minPosition));
+
+        return Math.max(minPosition, Math.min(maxPosition, adjustedPercentage));
+    }, [hue]);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isDraggingRef.current) return;
+        if (!isDraggingRef.current || !sliderRef.current) return;
 
-        const slider = sliderRef.current;
-        if (!slider) return;
-
-        const rect = slider.getBoundingClientRect();
+        const rect = sliderRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const newHue = getHueFromPosition(x);
 
@@ -78,7 +73,6 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
             newHue.g,
             newHue.b,
         );
-        console.log(newColor)
         setCurrentColor(newColor);
     }, [hue])
 
@@ -89,24 +83,40 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
     }, [handleMouseMove]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        if (disabled) return;
+        if (disabled || !sliderRef.current) return;
+
+        e.preventDefault();
 
         isDraggingRef.current = true;
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
 
-        const slider = sliderRef.current;
-        if (!slider) return;
-
-        const rect = slider.getBoundingClientRect();
+        const rect = sliderRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const newHue = getHueFromPosition(x);
         onChange(newHue);
-    }, [handleMouseMove, handleMouseUp, getHueFromPosition, onChange]);
+    }, [disabled, handleMouseMove, handleMouseUp, getHueFromPosition, onChange]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (sliderRef.current) {
+                setCurrentColor(prev => {
+                    if (!prev) return null;
+                    return {...prev};
+                });
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     return (
         <div
-            className={`w-full ${className} mb-4`}
+            className={clsx(
+                'w-full mb-4',
+                className
+            )}
         >
             <div
                 ref={sliderRef}
@@ -118,8 +128,13 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
                 onMouseDown={handleMouseDown}
             >
                 <div
-                    className={`absolute w-6 h-6 hover:scale-[1.2] hover:border-3 transition-colors duration-200 border-2 border-white rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing`}
-                    style={{left: `${getThumbPosition()}%`, backgroundColor: currentColor?.hex || "#fff"}}
+                    className={`absolute w-6 h-6 hover:scale-[1.2] hover:border-3 transition-colors duration-200 border-2 border-white rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1 cursor-grab active:cursor-grabbing ${
+                        disabled ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    style={{
+                        left: `${getThumbPosition()}%`,
+                        backgroundColor: currentColor?.hex || "#fff",
+                    }}
                 />
             </div>
         </div>

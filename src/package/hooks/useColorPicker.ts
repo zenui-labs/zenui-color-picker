@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { ColorValue, ColorFormat, UseColorPickerOptions } from '../types';
-import { parseColor, colorToValue } from '../utils/colorUtils';
+import {useCallback, useRef, useState} from 'react';
+import {ColorFormat, ColorValue, UseColorPickerOptions} from '../types';
+import {colorToValue, parseColor} from '../utils/colorUtils';
 
 export function useColorPicker(options: UseColorPickerOptions = {}) {
     const {
@@ -25,7 +25,6 @@ export function useColorPicker(options: UseColorPickerOptions = {}) {
     const updateColor = useCallback((color: ColorValue) => {
         setCurrentColor(color);
 
-        // Add to history if not already present
         if (!historyRef.current.has(color.hex)) {
             historyRef.current.add(color.hex);
             setColorHistory(prev => {
@@ -76,14 +75,11 @@ export function useColorPicker(options: UseColorPickerOptions = {}) {
     }, [showAlpha, updateColor]);
 
     return {
-        // State
         currentColor,
         currentFormat,
         isOpen,
         colorHistory,
         favoriteColors,
-
-        // Actions
         updateColor,
         updateFormat,
         setIsOpen,

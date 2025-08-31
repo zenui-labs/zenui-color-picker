@@ -21,7 +21,7 @@ export const FeaturesSection: React.FC = () => {
         {
             icon: <Code2 className="w-6 h-6"/>,
             title: 'Framework Agnostic',
-            description: 'Works seamlessly with React, Next.js, Vue.js'
+            description: 'Works seamlessly with React, Next.js, Vue.js(coming)'
         },
         {
             icon: <Shield className="w-6 h-6"/>,
@@ -36,8 +36,8 @@ export const FeaturesSection: React.FC = () => {
     ];
 
     return (
-        <section id='features' className="py-20">
-            <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section id='features' className="py-8 lg:py-20">
+            <div className="max-w-[1200px] mx-auto px-6 lg:px-0">
                 <div className="text-center mb-16">
                     <h2 className="text-[2.5rem] dark:text-darkText font-bold text-gray-900 mb-2">
                         Powerful Features

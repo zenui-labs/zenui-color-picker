@@ -19,7 +19,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
 
     const [width, setWidth] = useState(0);
 
-    // --- Responsive width observer ---
     useEffect(() => {
         if (!containerRef.current) return;
         const observer = new ResizeObserver((entries) => {
@@ -31,7 +30,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
         return () => observer.disconnect();
     }, []);
 
-    // --- Draw SV box ---
     const drawSVBox = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas || !width) return;
@@ -42,40 +40,34 @@ export const HueBox: React.FC<SVBoxProps> = ({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Fill with base hue
         const hueColor = `hsl(${color.hsv.h}, 100%, 50%)`;
         ctx.fillStyle = hueColor;
         ctx.fillRect(0, 0, width, height);
 
-        // White overlay (saturation)
         const whiteGradient = ctx.createLinearGradient(0, 0, width, 0);
         whiteGradient.addColorStop(0, "#fff");
         whiteGradient.addColorStop(1, "transparent");
         ctx.fillStyle = whiteGradient;
         ctx.fillRect(0, 0, width, height);
 
-        // Black overlay (value)
         const blackGradient = ctx.createLinearGradient(0, 0, 0, height);
         blackGradient.addColorStop(0, "transparent");
         blackGradient.addColorStop(1, "#000");
         ctx.fillStyle = blackGradient;
         ctx.fillRect(0, 0, width, height);
 
-        // Thumb
         const x = (color.hsv.s / 100) * width;
         const y = height - (color.hsv.v / 100) * height;
 
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, Math.PI * 2);
 
-        // Shadow
         ctx.shadowColor = "rgba(0,0,0,0.4)";
         ctx.shadowBlur = 6;
 
         ctx.fillStyle = color.hex;
         ctx.fill();
 
-        // Reset shadow
         ctx.shadowBlur = 0;
 
         ctx.lineWidth = 2;
@@ -87,7 +79,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
         drawSVBox();
     }, [drawSVBox]);
 
-    // --- Get coordinates from event ---
     const getCoordinatesFromEvent = (e: MouseEvent | React.MouseEvent | WheelEvent) => {
         if (!canvasRef.current) return null;
 
@@ -98,7 +89,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
         return {x, y};
     };
 
-    // --- Update color from coordinates ---
     const updateColorFromCoordinates = (x: number, y: number) => {
         const s = Math.max(0, Math.min(100, (x / width) * 100));
         const v = Math.max(0, Math.min(100, 100 - (y / height) * 100));
@@ -107,7 +97,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
         onChange(colorToValue(r, g, b, color.rgb.a));
     };
 
-    // --- Mouse handlers ---
     const handleMove = (e: MouseEvent) => {
         if (!isDraggingRef.current) return;
 
@@ -136,14 +125,12 @@ export const HueBox: React.FC<SVBoxProps> = ({
         document.addEventListener("mouseup", handleUp);
     };
 
-    // --- Wheel handler for smooth scrolling ---
     const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
 
         const coords = getCoordinatesFromEvent(e);
         if (!coords) return;
 
-        // Determine scroll direction and sensitivity
         const scrollSensitivity = 2;
         const deltaY = e.deltaY;
         const deltaX = e.deltaX;
@@ -151,12 +138,9 @@ export const HueBox: React.FC<SVBoxProps> = ({
         let newS = color.hsv.s;
         let newV = color.hsv.v;
 
-        // Vertical scrolling affects value (brightness)
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
             newV = Math.max(0, Math.min(100, color.hsv.v - (deltaY / scrollSensitivity)));
-        }
-        // Horizontal scrolling affects saturation
-        else {
+        } else {
             newS = Math.max(0, Math.min(100, color.hsv.s + (deltaX / scrollSensitivity)));
         }
 
@@ -164,7 +148,6 @@ export const HueBox: React.FC<SVBoxProps> = ({
         onChange(colorToValue(r, g, b, color.rgb.a));
     };
 
-    // --- Keyboard support ---
     const handleKeyDown = (e: React.KeyboardEvent) => {
         const step = e.shiftKey ? 10 : 1;
         let newS = color.hsv.s;

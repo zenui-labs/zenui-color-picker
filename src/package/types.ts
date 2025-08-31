@@ -1,5 +1,7 @@
+import React from "react";
+
 export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk';
-export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'advance' | 'hue-box'
+export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box'
 export type Themes = 'light' | 'dark';
 
 export interface ColorValue {
@@ -32,14 +34,14 @@ export interface ColorPickerProps {
     showColorInput?: boolean;
     showTitle?: boolean;
     title?: string
-    popupStyle?: string;
+    popupClasses?: string;
     showAlpha?: boolean;
     showHistory?: boolean;
     showFormats?: boolean;
     showCopyButton?: boolean;
     presetColors?: string[];
     maxHistory?: number;
-    className?: string;
+    containerClasses?: string;
     containerStyle?: React.CSSProperties;
     onChange?: (color: ColorValue, format: ColorFormat) => void;
     onFormatChange?: (format: ColorFormat) => void;
@@ -50,6 +52,8 @@ export interface ColorPickerProps {
     enableFavorite?: boolean;
     showPresets?: boolean;
     enableShuffle?: boolean;
+    triggerRef?: React.RefObject<HTMLElement>;
+    showDefaultButton?: boolean;
 }
 
 export interface UseColorPickerOptions {

@@ -1,7 +1,7 @@
 {
-  "name": "@zenui/color-picker",
+  "name": "@zenui/color-picker-react",
   "version": "1.0.0",
-  "description": "A comprehensive, developer-friendly color picker component with multiple variants and color format support",
+  "description": "A developer-friendly color picker with maximum customization ability also multiple variants and color format support",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -25,6 +25,10 @@
     "developer-tools"
   ],
   "author": "ZenUI Labs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenui-labs/zenui-color-picker"
+  },
   "license": "MIT",
   "files": [
     "dist/**/*",
@@ -43,6 +47,7 @@
     "@types/react-dom": "^18.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react": "^4.3.1",
+    "clsx": "^2.1.1",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
@@ -50,6 +55,7 @@
     "postcss": "^8.4.35",
     "react-syntax-highlighter": "^15.6.6",
     "tailwind-animate": "^0.2.10",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",

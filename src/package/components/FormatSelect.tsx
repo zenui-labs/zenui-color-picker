@@ -1,11 +1,12 @@
-import {useEffect, useRef, useState} from "react";
-import {ColorFormat} from "../types.ts";
-import {ChevronDown} from "lucide-react";
+import {useEffect, useRef, useState} from 'react';
+import {ColorFormat} from '../types.ts';
+import {ChevronDown} from 'lucide-react';
+import {clsx} from 'clsx';
 
 type FormatSelectProps = {
     currentFormat: ColorFormat;
     handleFormatChange?: (newFormat: ColorFormat) => void;
-    theme?: "light" | "dark";
+    theme?: 'light' | 'dark';
     disabled?: boolean;
 };
 
@@ -20,7 +21,7 @@ export default function FormatSelect({
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
-    const options: ColorFormat[] = ["hex", "rgb", "hsl", "hsv", "cmyk"];
+    const options: ColorFormat[] = ['hex', 'rgb', 'hsl', 'hsv', 'cmyk'];
 
     useEffect(() => {
         if (open && buttonRef.current) {
@@ -59,62 +60,55 @@ export default function FormatSelect({
             }
         };
 
-        document.addEventListener("mousedown", handleClickOutside);
-        window.addEventListener("resize", handleResize);
-        window.addEventListener("scroll", handleScroll, true);
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleScroll, true);
 
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-            window.removeEventListener("resize", handleResize);
-            window.removeEventListener("scroll", handleScroll, true);
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleScroll, true);
         };
     }, [open]);
 
     return (
-        <div ref={dropdownRef} className="relative w-full">
+        <div ref={dropdownRef} className='relative w-full'>
             <button
                 ref={buttonRef}
-                type="button"
+                type='button'
                 disabled={disabled}
                 onClick={() => setOpen((prev) => !prev)}
-                className={`w-full px-3 py-2 rounded-lg cursor-pointer border text-sm flex justify-between items-center
-          focus:outline-none focus:ring-2 disabled:cursor-not-allowed focus:ring-[var(--brand-color)] transition-colors
-          ${theme === "dark" ? "bg-gray-800 border-gray-700 text-white" : "bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-black"}
-        `}
+                className={clsx(
+                    'w-full px-3 py-2 rounded-lg cursor-pointer border text-sm flex justify-between items-center\n          focus:outline-none focus:ring-2 disabled:cursor-not-allowed focus:ring-[var(--brand-color)] transition-colors',
+                    theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-black'
+                )}
             >
                 {currentFormat.toUpperCase()}
                 <ChevronDown
                     size={20}
-                    className={`transition-all ${theme === 'dark' ? 'text-gray-200' : 'text-gray-500 dark:text-gray-200'} duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+                    className={clsx('transition-all duration-200',
+                        theme === 'dark' ? 'text-gray-200' : 'text-gray-500 dark:text-gray-200',
+                        open ? 'rotate-180' : 'rotate-0'
+                    )}
                 />
             </button>
 
             <ul
-                className={`
-          absolute z-10 w-full p-1.5 rounded-lg shadow-lg overflow-hidden border
-          ${theme === "dark"
-                    ? "bg-gray-800 border-gray-700"
-                    : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                }
-          ${dropdownPosition === 'top'
-                    ? 'bottom-full mb-1'
-                    : 'top-full mt-1'
-                } 
-          ${open
-                    ? (dropdownPosition === 'top' ? "animate-slideUp" : "animate-slideDown")
-                    : "hidden"
-                }
-        `}
+                className={clsx(
+                    'absolute z-10 w-full p-1.5 rounded-lg shadow-lg overflow-hidden border',
+                    theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+                    dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1',
+                    open ? dropdownPosition === 'top' ? 'animate-slideUp' : 'animate-slideDown' : 'hidden'
+                )}
             >
                 {options.map((option) => (
                     <li
                         key={option}
-                        className={`px-3 py-2 rounded-lg cursor-pointer transition-colors text-sm
-              ${currentFormat === option
-                            ? "bg-[var(--brand-color)] text-white"
-                            : `hover:bg-[var(--brand-color)]/10 ${theme === 'dark' ? 'text-white' : 'text-black dark:text-white'}`
-                        }
-            `}
+                        className={clsx(
+                            'px-3 py-2 rounded-lg cursor-pointer transition-colors text-sm',
+                            currentFormat === option ? 'bg-[var(--brand-color)] text-white' : 'hover:bg-[var(--brand-color)]/10',
+                            theme === 'dark' ? 'text-white' : 'text-black dark:text-white'
+                        )}
                         onClick={() => {
                             if (handleFormatChange) {
                                 handleFormatChange(option);

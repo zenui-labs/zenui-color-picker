@@ -15,15 +15,19 @@ export const BrightnessSlider: React.FC<ColorSliderProps> = ({
     const sliderRef = useRef<HTMLDivElement>(null);
     const [currentColor, setCurrentColor] = useState<ColorValue | null>(null);
 
+    const clampToThreeDecimals = (num: number) => {
+        return parseFloat(Math.max(0, Math.min(1, num)).toFixed(2));
+    };
+
     const handleMouseMove = useCallback((e: MouseEvent) => {
         const slider = sliderRef.current;
         if (!slider) return;
 
         const rect = slider.getBoundingClientRect();
-        const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        const x = Math.max(2, Math.min(rect.width, e.clientX - rect.left));
         const percentage = x / rect.width;
 
-        onChange(Math.max(0, Math.min(1, percentage)));
+        onChange(clampToThreeDecimals(percentage));
     }, [onChange]);
 
     useEffect(() => {

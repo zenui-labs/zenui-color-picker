@@ -1,4 +1,4 @@
-import {useMemo, useState} from "react";
+import {useMemo, useRef, useState} from "react";
 import {Code, Eye, Settings} from "lucide-react";
 import {ColorFormat, ColorPicker} from "../../package";
 import {InputField} from "../components/input-field.tsx";
@@ -19,7 +19,6 @@ const formatOptions = [
 const variantOptions = [
     {value: "wheel", label: "Color Wheel"},
     {value: "hue-slider", label: "Hue Slider"},
-    {value: "advance", label: "Advanced"},
     {value: "hue-box", label: "Hue Box"},
 ];
 
@@ -36,6 +35,7 @@ export const Playground = () => {
     const [title, setTitle] = useState("Color Picker");
     const [brandColor, setBrandColor] = useState("#3B82F6");
     const [copied, setCopied] = useState(false);
+    const brandColorButtonRef = useRef<HTMLDivElement>(null);
 
     const [toggles, setToggles] = useState({
         showTitle: false,
@@ -97,18 +97,18 @@ export const Playground = () => {
     }
 
     return (
-        <section id="playground" className="pt-10 pb-20 max-w-[1200px] mx-auto px-4">
+        <section id="playground" className="pt-10 pb-20 max-w-[1200px] mx-auto px-6 lg:px-0">
             <div className="text-center">
                 <h2 className="text-[2.5rem] font-bold dark:text-darkText text-gray-900 mb-2">
                     Interactive Playground
                 </h2>
-                <p className="text-lg dark:text-darkTextMuted text-gray-600 max-w-2xl mx-auto">
+                <p className="text-base lg:text-lg dark:text-darkTextMuted text-gray-600 max-w-2xl mx-auto">
                     Experiment with different configurations and see how the color picker adapts to your needs.
                 </p>
             </div>
 
-            <div className="flex justify-between gap-[100px] mt-12">
-                <div className="space-y-6 flex-1 min-w-[400px]">
+            <div className="flex flex-col lg:flex-row justify-between gap-[50px] lg:gap-[100px] mt-12">
+                <div className="space-y-6 flex-1 w-full lg:min-w-[400px]">
                     <div className="dark:bg-gray-900 rounded-xl shadow-lg p-6 mb-6">
                         <div className="flex items-center mb-4">
                             <Settings className="w-6 h-6 text-accent mr-2"/>
@@ -116,7 +116,7 @@ export const Playground = () => {
                         </div>
 
                         <div className="space-y-6 mt-5">
-                            <div className="flex gap-5">
+                            <div className="flex flex-col lg:flex-row gap-5">
                                 <SelectField
                                     label="Color Format"
                                     name="format"
@@ -138,7 +138,7 @@ export const Playground = () => {
                                 />
                             </div>
 
-                            <div className="flex gap-5">
+                            <div className="flex flex-col lg:flex-row gap-5">
                                 <SelectField
                                     label="Theme"
                                     name="theme"
@@ -157,16 +157,24 @@ export const Playground = () => {
                                 />
                             </div>
 
-                            <div className="w-[50%]">
+                            <div className="w-full lg:w-[48%]">
                                 <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-darkTextMuted">
                                     Brand Color
                                 </label>
+                                <div
+                                    ref={brandColorButtonRef}
+                                    className='border flex items-center gap-3 border-gray-200 dark:border-darkBorder rounded-lg p-1.5'>
+                                    <div className='size-8 rounded-md' style={{backgroundColor: brandColor}}></div>
+                                    <p className='text-base text-gray-800 dark:text-darkTextMuted'>{brandColor || ''}</p>
+                                </div>
                                 <ColorPicker
                                     variant="hue-box"
                                     showPresets={false}
                                     showHistory={false}
                                     showAlpha={false}
+                                    triggerRef={brandColorButtonRef}
                                     showCopyButton={false}
+                                    showDefaultButton={false}
                                     showFormats={false}
                                     enableHueSlider={true}
                                     showTitle={false}
@@ -180,7 +188,7 @@ export const Playground = () => {
                             <h3 className="text-lg font-semibold dark:text-darkText text-gray-900">Display Options</h3>
                         </div>
 
-                        <div className="grid mt-5 grid-cols-3 gap-y-5">
+                        <div className="grid mt-5 grid-cols-2 lg:grid-cols-3 gap-y-5">
                             {Object.entries(toggles).map(([key, value]) => (
                                 <CheckboxField
                                     key={key}
@@ -239,15 +247,16 @@ export const Playground = () => {
                     </div>
                 </div>
 
-                <div className="lg:sticky lg:top-8">
+                <div className="lg:sticky w-full lg:w-auto lg:top-8">
                     <ColorPicker
                         value={selectedColor}
                         format={format}
+                        containerClasses={'w-full'}
                         variant={variant}
                         theme={theme}
                         title={title}
                         brandColor={brandColor}
-                        popupStyle="border-gray-200 w-[420px]"
+                        popupClasses="border-gray-200 w-full lg:w-[420px]"
                         {...toggles}
                         onChange={(color) => setSelectedColor(color.hex)}
                         onFormatChange={(newFormat) => setFormat(newFormat)}
