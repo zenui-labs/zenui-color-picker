@@ -3,9 +3,9 @@
 A developer-friendly color picker component with TypeScript support, multiple interactive variants, and extensive
 customization options.
 
-## Live demo:
+## Live demo: https://color-picker.zenui.net/
 
-![img.png](img.png)
+![showcase image](https://ik.imagekit.io/b2xymuik2/website%20preview%20image.png)
 
 ## Contents
 
@@ -94,6 +94,27 @@ function BasicExample() {
         <ColorPicker
             value={color}
             format="hex"
+            variant="wheel"
+            onChange={(val) => setColor(val.hex)}
+        />
+    );
+}
+```
+
+Use picker as inline:
+
+```tsx
+import React, {useState} from 'react';
+import {ColorPicker} from '@zenui/color-picker-react';
+
+function BasicExample() {
+    const [color, setColor] = useState('#4F46E5');
+
+    return (
+        <ColorPicker
+            value={color}
+            format="hex"
+            inline={true} // now the picker will render as inline
             variant="wheel"
             onChange={(val) => setColor(val.hex)}
         />
@@ -375,7 +396,7 @@ Before submitting:
 
 ## 📄 License
 
-[MIT License](gadsgg)
+[MIT License](LICENSE)
 
 ---
 

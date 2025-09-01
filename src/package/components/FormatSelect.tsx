@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {ColorFormat} from '../types.ts';
+import {ColorFormat} from '../types';
 import {ChevronDown} from 'lucide-react';
 import {clsx} from 'clsx';
 

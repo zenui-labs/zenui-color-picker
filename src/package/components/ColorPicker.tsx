@@ -3,12 +3,12 @@ import {Heart, RotateCcw} from 'lucide-react';
 import {ColorFormat, ColorPickerProps, ColorValue} from '../types';
 import {colorToValue, defaultPresetColors, formatColorValue, hsvToRgb, parseColor} from '../utils/colorUtils';
 import {useColorPicker} from '../hooks/useColorPicker';
-import {BrightnessSlider} from './BrightnessSlider.tsx';
+import {BrightnessSlider} from './BrightnessSlider';
 import {ColorInput} from './ColorInput';
-import {ColorSlider} from "./variants/ColorSlider.tsx";
-import {WheelPicker} from "./variants/wheel-picker.tsx";
-import {HueBox} from "./variants/hue-box.tsx";
-import FormatSelect from "./FormatSelect.tsx";
+import {ColorSlider} from "./variants/ColorSlider";
+import {WheelPicker} from "./variants/wheel-picker";
+import {HueBox} from "./variants/hue-box";
+import FormatSelect from "./FormatSelect";
 import {clsx} from "clsx";
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
@@ -277,7 +277,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 className={clsx('p-4 rounded-xl w-80 shadow-2xl border backdrop-blur-xs',
                     themeClasses,
                     popupClasses,
-                    disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-default',
+                    disabled ? '!opacity-70 !cursor-not-allowed' : 'cursor-default',
                     isOpen ? (dropdownPositionY === 'top' ? 'animate-slideUp' : 'animate-slideDown') : '',
                     !isOpen && 'hidden'
                 )}
@@ -349,6 +349,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         <BrightnessSlider
                             value={currentColor.rgb.a || 1}
                             color={currentColor}
+                            disabled={disabled}
                             onChange={(alpha) => {
                                 const newColor = colorToValue(
                                     currentColor.rgb.r,
@@ -407,7 +408,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         const parsed = parseColor(color);
                                         if (parsed) handleColorChange(parsed);
                                     }}
-                                    className={clsx('disabled:cursor-not-allowed w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 transition-transform duration-200',
+                                    className={clsx('disabled:cursor-not-allowed w-8 h-8 rounded-lg cursor-pointer border dark:border-gray-700 border-gray-200 hover:scale-110 disabled:hover:scale-100 transition-transform duration-200',
                                         isDark ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'
                                     )}
                                     style={{backgroundColor: color}}
@@ -436,7 +437,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => addToFavorites(color)}
                                         className={clsx(
-                                            ' disabled:cursor-not-allowed w-6 h-6 rounded-sm border hover:scale-110 transition-transform duration-200',
+                                            ' disabled:cursor-not-allowed w-6 h-6 rounded-sm border hover:scale-110 transition-transform disabled:hover:scale-100 duration-200',
                                             isDark ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'
                                         )}
                                         style={{backgroundColor: color.hex}}

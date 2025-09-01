@@ -31,7 +31,7 @@ const Hero = () => {
 
     return (
         <section id="home"
-                 className="pt-24 px-6 lg:px-0 flex-col lg:flex-row flex max-w-[1200px] justify-between items-center min-h-screen gap-[50px] lg:gap-[100px] mx-auto pb-20 bg-gradient-to-br">
+                 className="pt-24 px-6 lg:px-0 flex-col lg:flex-row flex max-w-[1200px] justify-between items-center min-h-screen gap-[50px] lg:gap-[100px] mx-auto pb-20">
             <div className="space-y-8 max-w-[650px]">
                 <div className="space-y-4">
                     <h1 className="text-[3rem] lg:text-[3.5rem] font-bold dark:text-darkText text-gray-900 leading-tight">
@@ -107,6 +107,7 @@ const Hero = () => {
             <ColorPicker
                 onChange={handleColorChange}
                 inline
+                containerClasses={'w-full'}
                 variant={'hue-box'}
                 showHistory={false}
                 enableHueSlider

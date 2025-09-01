@@ -36,6 +36,7 @@ export const Playground = () => {
     const [brandColor, setBrandColor] = useState("#3B82F6");
     const [copied, setCopied] = useState(false);
     const brandColorButtonRef = useRef<HTMLDivElement>(null);
+    const [maxHistory, setMaxHistory] = useState(10);
 
     const [toggles, setToggles] = useState({
         showTitle: false,
@@ -64,6 +65,7 @@ export const Playground = () => {
             `variant="${variant}"`,
             `theme="${theme}"`,
             `showTitle={${toggles.showTitle}}`,
+            `maxHistory={${maxHistory}}`,
             toggles.disabled && `disabled={true}`,
             toggles.inline && `inline={true}`,
             title !== "Color Picker" && `title="${title}"`,
@@ -157,29 +159,41 @@ export const Playground = () => {
                                 />
                             </div>
 
-                            <div className="w-full lg:w-[48%]">
-                                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-darkTextMuted">
-                                    Brand Color
-                                </label>
-                                <div
-                                    ref={brandColorButtonRef}
-                                    className='border flex items-center gap-3 border-gray-200 dark:border-darkBorder rounded-lg p-1.5'>
-                                    <div className='size-8 rounded-md' style={{backgroundColor: brandColor}}></div>
-                                    <p className='text-base text-gray-800 dark:text-darkTextMuted'>{brandColor || ''}</p>
+                            <div className='w-full flex gap-5 flex-col lg:flex-row'>
+                                <div className="flex-1">
+                                    <label
+                                        className="block text-sm font-medium text-gray-700 mb-2 dark:text-darkTextMuted">
+                                        Brand Color
+                                    </label>
+                                    <div
+                                        ref={brandColorButtonRef}
+                                        className='border flex items-center gap-3 border-gray-200 dark:border-darkBorder rounded-lg p-1'>
+                                        <div className='size-8 rounded-md' style={{backgroundColor: brandColor}}></div>
+                                        <p className='text-base text-gray-800 dark:text-darkTextMuted'>{brandColor || ''}</p>
+                                    </div>
+                                    <ColorPicker
+                                        variant="hue-box"
+                                        showPresets={false}
+                                        showHistory={false}
+                                        showAlpha={false}
+                                        triggerRef={brandColorButtonRef}
+                                        showCopyButton={false}
+                                        showDefaultButton={false}
+                                        showFormats={false}
+                                        enableHueSlider={true}
+                                        showTitle={false}
+                                        onChange={(color) => setBrandColor(color.hex)}
+                                    />
                                 </div>
-                                <ColorPicker
-                                    variant="hue-box"
-                                    showPresets={false}
-                                    showHistory={false}
-                                    showAlpha={false}
-                                    triggerRef={brandColorButtonRef}
-                                    showCopyButton={false}
-                                    showDefaultButton={false}
-                                    showFormats={false}
-                                    enableHueSlider={true}
-                                    showTitle={false}
-                                    onChange={(color) => setBrandColor(color.hex)}
-                                />
+
+                                <div className="flex-1">
+                                    <InputField
+                                        label={'Max History'}
+                                        type={'number'}
+                                        value={maxHistory}
+                                        onChange={(e) => setMaxHistory(Number(e.target.value))}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -255,6 +269,7 @@ export const Playground = () => {
                         variant={variant}
                         theme={theme}
                         title={title}
+                        maxHistory={maxHistory}
                         brandColor={brandColor}
                         popupClasses="border-gray-200 w-full lg:w-[420px]"
                         {...toggles}

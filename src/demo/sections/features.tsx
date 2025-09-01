@@ -77,16 +77,17 @@ export const FeaturesSection: React.FC = () => {
                     Get up and running in minutes with our comprehensive documentation.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button
-                        type='button'
+                    <a
+                        href='https://github.com/zenui-labs/zenui-color-picker/blob/main/README.md'
+                        target='_blank'
                         className="px-8 cursor-pointer py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                         View Documentation
-                    </button>
-                    <button
-                        type='button'
+                    </a>
+                    <a
+                        href='#playground'
                         className="px-8 cursor-pointer dark:border-darkBorder dark:text-darkText dark:hover:bg-gray-800 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
                         Browse Examples
-                    </button>
+                    </a>
                 </div>
             </div>
 

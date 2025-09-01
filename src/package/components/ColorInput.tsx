@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {ColorFormat} from '../types';
-import {useColorPicker} from "../hooks/useColorPicker.ts";
+import {useColorPicker} from "../hooks/useColorPicker";
 import {Check, Copy} from "lucide-react";
 import {clsx} from "clsx";
 
