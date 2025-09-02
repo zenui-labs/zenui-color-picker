@@ -1,7 +1,5 @@
 import {AlignRight, Github, Moon, Sun, X} from "lucide-react";
 import {useEffect, useState} from "react";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import Logo from "../../assets/logo.png"
 
 const Navbar = () => {

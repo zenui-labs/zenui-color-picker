@@ -68,7 +68,7 @@ export const FeaturesSection: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-accent/10 text-center mt-16 rounded-2xl p-12">
+            <div className="bg-accent/10 text-center mt-16 p-12">
                 <h3 className="text-[2.3rem] font-bold dark:text-darkText text-gray-900 mb-2">
                     Ready to get started?
                 </h3>

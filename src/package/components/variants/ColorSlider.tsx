@@ -162,6 +162,12 @@ export const ColorSlider: React.FC<ColorSliderProps> = ({
                 onTouchStart={handleTouchStart}
             >
                 <div
+                    role="slider"
+                    aria-valuemin={0}
+                    aria-valuemax={359}
+                    aria-valuenow={hue}
+                    aria-valuetext={`${hue} degrees`}
+                    aria-disabled={disabled}
                     className={clsx(
                         'absolute w-6 h-6 transition-colors duration-200 border-2 border-white rounded-full shadow-xl transform -translate-x-1/2 -translate-y-1',
                         disabled ? 'opacity-50 cursor-not-allowed' : 'active:cursor-grabbing cursor-grab hover:border-3 hover:scale-[1.2]'

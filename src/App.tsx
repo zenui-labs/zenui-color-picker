@@ -1,8 +1,8 @@
-import Navbar from "./demo/sections/navbar.tsx";
-import Hero from "./demo/sections/hero.tsx";
-import {FeaturesSection} from "./demo/sections/features.tsx";
-import Playground from "./demo/sections/playground.tsx";
-import Footer from "./demo/sections/footer.tsx";
+import Navbar from "./demo/sections/navbar";
+import Hero from "./demo/sections/hero";
+import {FeaturesSection} from "./demo/sections/features";
+import Playground from "./demo/sections/playground";
+import Footer from "./demo/sections/footer";
 
 function App() {
     return (

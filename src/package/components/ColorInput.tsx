@@ -88,6 +88,10 @@ export const ColorInput: React.FC<ColorInputProps> = ({
     return (
         <div className='relative'>
             <input
+                id={`zenuicolorpicker-input-${format}`}
+                aria-label={`Enter color in ${format.toUpperCase()} format`}
+                aria-invalid={!isValid}
+                aria-describedby={!isValid ? `color-input-error-${format}` : undefined}
                 type="text"
                 value={inputValue}
                 disabled={disabled}
@@ -102,6 +106,8 @@ export const ColorInput: React.FC<ColorInputProps> = ({
             />
             {showCopyButton && (
                 <button
+                    aria-label={copySuccess ? "Color copied to clipboard" : "Copy color value"}
+                    aria-live="polite"
                     type='button'
                     disabled={disabled}
                     onClick={handleCopy}

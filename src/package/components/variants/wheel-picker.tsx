@@ -1,17 +1,20 @@
 import React, {useCallback, useEffect, useRef} from 'react';
 import {ColorValue} from '../../types';
 import {colorToValue, hsvToRgb} from '../../utils/colorUtils';
+import {clsx} from "clsx";
 
 interface ColorWheelProps {
     color: ColorValue;
     onChange: (color: ColorValue) => void;
     size?: number;
+    disabled?: boolean;
 }
 
 export const WheelPicker: React.FC<ColorWheelProps> = ({
                                                            color,
                                                            onChange,
-                                                           size = 200
+                                                           size = 200,
+                                                           disabled
                                                        }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDraggingRef = useRef(false);
@@ -183,7 +186,10 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
                 width={size}
                 height={size}
                 onMouseDown={handleMouseDown}
-                className="cursor-crosshair rounded-lg"
+                className={clsx(
+                    'rounded-lg',
+                    disabled ? 'cursor-not-allowed' : 'cursor-crosshair'
+                )}
                 style={{width: size, height: size}}
             />
         </div>

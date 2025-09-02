@@ -1,4 +1,4 @@
-import CustomSelect from "./custom-select.tsx";
+import CustomSelect from "./custom-select";
 
 type SelectFieldProps = {
     label: string,

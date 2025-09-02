@@ -16,7 +16,7 @@ const Hero = () => {
 
     const installCommands = {
         npm: {
-            react: "npm install @zenui/color-picker-react",
+            react: "npm install @zenuilabs/color-picker-react",
             vue: "coming soon",
         },
     }
@@ -53,12 +53,14 @@ const Hero = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row mt-12 gap-4">
-                        <button
+                        <a
+                            href='https://www.npmjs.com/package/@zenuilabs/color-picker-react'
+                            target='_blank'
                             type='button'
-                            className="flex cursor-pointer items-center justify-center px-8 py-3 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl">
+                            className="flex cursor-pointer items-center justify-center px-8 py-3 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl group">
                             Get Started
-                            <ArrowRight className="w-5 h-5 ml-2"/>
-                        </button>
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover:ml-3 transition-all duration-200"/>
+                        </a>
                         <a href='https://github.com/zenui-labs/zenui-color-picker'
                            target='_blank'
                            className="flex cursor-pointer items-center dark:border-darkBorder dark:hover:bg-gray-800 justify-center px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 dark:text-darkText transition-colors">

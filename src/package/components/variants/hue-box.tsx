@@ -1,17 +1,20 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {ColorValue} from "../../types";
 import {colorToValue, hsvToRgb} from "../../utils/colorUtils";
+import {clsx} from "clsx";
 
 interface SVBoxProps {
     color: ColorValue;
     onChange: (color: ColorValue) => void;
     height?: number;
+    disabled?: boolean;
 }
 
 export const HueBox: React.FC<SVBoxProps> = ({
                                                  color,
                                                  onChange,
                                                  height = 180,
+                                                 disabled
                                              }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -186,7 +189,10 @@ export const HueBox: React.FC<SVBoxProps> = ({
                 onWheel={handleWheel}
                 onKeyDown={handleKeyDown}
                 tabIndex={0}
-                className="cursor-crosshair rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={clsx(
+                    'rounded-lg',
+                    disabled ? 'cursor-not-allowed' : 'cursor-crosshair'
+                )}
                 style={{display: "block", height}}
                 aria-label="Color saturation and value picker"
                 role="slider"

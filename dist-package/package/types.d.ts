@@ -1,17 +1,34 @@
-import React from "react";
-
+import { default as React } from 'react';
 export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk';
-export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box'
+export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box';
 export type Themes = 'light' | 'dark';
-
 export interface ColorValue {
     hex: string;
-    rgb: { r: number; g: number; b: number; a?: number };
-    hsl: { h: number; s: number; l: number; a?: number };
-    hsv: { h: number; s: number; v: number; a?: number };
-    cmyk: { c: number; m: number; y: number; k: number };
+    rgb: {
+        r: number;
+        g: number;
+        b: number;
+        a?: number;
+    };
+    hsl: {
+        h: number;
+        s: number;
+        l: number;
+        a?: number;
+    };
+    hsv: {
+        h: number;
+        s: number;
+        v: number;
+        a?: number;
+    };
+    cmyk: {
+        c: number;
+        m: number;
+        y: number;
+        k: number;
+    };
 }
-
 export interface ColorPickerTheme {
     primary: string;
     secondary: string;
@@ -23,7 +40,6 @@ export interface ColorPickerTheme {
     borderHover: string;
     shadow: string;
 }
-
 export interface ColorPickerProps {
     value?: string;
     format?: ColorFormat;
@@ -33,7 +49,7 @@ export interface ColorPickerProps {
     inline?: boolean;
     showColorInput?: boolean;
     showTitle?: boolean;
-    title?: string
+    title?: string;
     popupClasses?: string;
     showAlpha?: boolean;
     showHistory?: boolean;
@@ -55,7 +71,6 @@ export interface ColorPickerProps {
     triggerRef?: React.RefObject<HTMLElement>;
     showDefaultButton?: boolean;
 }
-
 export interface UseColorPickerOptions {
     initialColor?: string;
     initialFormat?: ColorFormat;

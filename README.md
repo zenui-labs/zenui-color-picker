@@ -1,4 +1,4 @@
-# @zenui/color-picker
+# @zenuilabs/color-picker
 
 A developer-friendly color picker component with TypeScript support, multiple interactive variants, and extensive
 customization options.
@@ -49,7 +49,7 @@ customization options.
 Using npm:
 
 ```bash
-npm install @zenui/color-picker-react
+npm install @zenuilabs/color-picker-react
 ```
 
 ---
@@ -58,7 +58,7 @@ npm install @zenui/color-picker-react
 
 ```tsx
 import React, {useState} from 'react';
-import {ColorPicker} from '@zenui/color-picker-react';
+import {ColorPicker} from '@zenuilabs/color-picker-react';
 
 export default function App() {
     const [color, setColor] = useState('#3B82F6');
@@ -85,7 +85,7 @@ Basic (HEX, wheel):
 
 ```tsx
 import React, {useState} from 'react';
-import {ColorPicker} from '@zenui/color-picker-react';
+import {ColorPicker} from '@zenuilabs/color-picker-react';
 
 function BasicExample() {
     const [color, setColor] = useState('#4F46E5');
@@ -105,7 +105,7 @@ Use picker as inline:
 
 ```tsx
 import React, {useState} from 'react';
-import {ColorPicker} from '@zenui/color-picker-react';
+import {ColorPicker} from '@zenuilabs/color-picker-react';
 
 function BasicExample() {
     const [color, setColor] = useState('#4F46E5');
@@ -126,7 +126,7 @@ Change format and access multiple representations:
 
 ```tsx
 import React, {useState} from 'react';
-import {ColorPicker, type ColorFormat} from '@zenui/color-picker-react';
+import {ColorPicker, type ColorFormat} from '@zenuilabs/color-picker-react';
 
 function FormatExample() {
     const [format, setFormat] = useState<ColorFormat>('rgb');
@@ -159,7 +159,7 @@ Hue box variant with presets, alpha, and history:
 
 ```tsx
 import React, {useState} from 'react';
-import {ColorPicker} from '@zenui/color-picker-react';
+import {ColorPicker} from '@zenuilabs/color-picker-react';
 
 const presetColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7B267', '#A78BFA'];
 
@@ -311,7 +311,7 @@ import {
     defaultPresetColors,
     type ColorValue,
     type ColorFormat,
-} from '@zenui/color-picker-react';
+} from '@zenuilabs/color-picker-react';
 ```
 
 - `parseColor(input: string): ColorValue` — Parses a string (HEX, RGB, HSL, etc.) into a full `ColorValue`.
@@ -417,14 +417,14 @@ import type {
     ColorValue,
     ColorPickerVariant,
     ColorPickerTheme,
-} from '@zenui/color-picker-react';
+} from '@zenuilabs/color-picker-react';
 ```
 
 ---
 
 ## 🛠️ Release & Build
 
-- The package is published on npm as `@zenui/color-picker-react`.
+- The package is published on npm as `@zenuilabs/color-picker-react`.
 - ESM build with tree-shaking-friendly structure.
 - CSS: no global stylesheet required; theming is provided via props and CSS variables.
 

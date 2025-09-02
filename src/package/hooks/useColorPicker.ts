@@ -4,10 +4,10 @@ import {colorToValue, parseColor} from '../utils/colorUtils';
 
 export function useColorPicker(options: UseColorPickerOptions = {}) {
     const {
-        initialColor = '#3B82F6',
+        initialColor = '#00AA45',
         initialFormat = 'hex',
         showAlpha = false,
-        maxHistory = 10
+        maxHistory = 10,
     } = options;
 
     const [currentColor, setCurrentColor] = useState<ColorValue>(() => {
@@ -71,6 +71,9 @@ export function useColorPicker(options: UseColorPickerOptions = {}) {
 
         const color = colorToValue(r, g, b, a);
         updateColor(color);
+        if (options.setCurrentHue) {
+            options.setCurrentHue(color.hsv.h);
+        }
         return color;
     }, [showAlpha, updateColor]);
 

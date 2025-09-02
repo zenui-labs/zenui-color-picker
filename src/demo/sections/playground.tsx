@@ -1,10 +1,10 @@
 import {useMemo, useRef, useState} from "react";
 import {Code, Eye, Settings} from "lucide-react";
 import {ColorFormat, ColorPicker} from "../../package";
-import {InputField} from "../components/input-field.tsx";
-import {CheckboxField} from "../components/checkbox-field.tsx";
-import {SelectField} from "../components/select-field.tsx";
-import {ColorPickerVariant, Themes} from "../../package/types.ts";
+import {InputField} from "../components/input-field";
+import {CheckboxField} from "../components/checkbox-field";
+import {SelectField} from "../components/select-field";
+import {ColorPickerVariant, Themes} from "../../package/types";
 import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
 import {atomDark} from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -109,8 +109,8 @@ export const Playground = () => {
                 </p>
             </div>
 
-            <div className="flex flex-col lg:flex-row justify-between gap-[50px] lg:gap-[100px] mt-12">
-                <div className="space-y-6 flex-1 w-full lg:min-w-[400px]">
+            <div className="flex flex-col lg:flex-row gap-[50px] lg:gap-[100px] mt-12">
+                <div className="space-y-6 flex-1 w-full lg:min-w-[400px] max-w-[60%]">
                     <div className="dark:bg-gray-900 rounded-xl shadow-lg p-6 mb-6">
                         <div className="flex items-center mb-4">
                             <Settings className="w-6 h-6 text-accent mr-2"/>

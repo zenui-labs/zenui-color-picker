@@ -11,6 +11,8 @@ import {HueBox} from "./variants/hue-box";
 import FormatSelect from "./FormatSelect";
 import {clsx} from "clsx";
 
+console.log(useState)
+
 export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             value,
                                                             format = 'hex',
@@ -42,6 +44,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             triggerRef: externalTriggerRef,
                                                             showDefaultButton = true
                                                         }) => {
+    const [dropdownPositionY, setDropdownPositionY] = useState<'bottom' | 'top'>('bottom');
+    const [dropdownPositionX, setDropdownPositionX] = useState<'left' | 'right' | 'center'>('left');
+
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const internalTriggerRef = useRef<HTMLButtonElement>(null);
+    const [currentHue, setCurrentHue] = useState<number>(180);
+
     const {
         currentColor,
         currentFormat,
@@ -58,15 +67,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         initialColor: value,
         initialFormat: format,
         showAlpha,
-        maxHistory
+        maxHistory,
+        setCurrentHue
     });
-
-    const [dropdownPositionY, setDropdownPositionY] = useState<'bottom' | 'top'>('bottom');
-    const [dropdownPositionX, setDropdownPositionX] = useState<'left' | 'right' | 'center'>('left');
-
-    const popoverRef = useRef<HTMLDivElement>(null);
-    const internalTriggerRef = useRef<HTMLButtonElement>(null);
-    const [currentHue, setCurrentHue] = useState<number>(180);
 
     const activeTriggerRef = externalTriggerRef || internalTriggerRef;
 
@@ -260,6 +263,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             {
                 !inline && showDefaultButton && !externalTriggerRef && (
                     <button
+                        aria-haspopup="dialog"
+                        aria-expanded={isOpen}
+                        aria-controls="zenuicolorpicker-popover"
                         type='button'
                         ref={internalTriggerRef}
                         onClick={handleOpen}
@@ -273,6 +279,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             }
 
             <div
+                id="zenuicolorpicker-popover"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="zenuicolorpicker-title"
                 ref={popoverRef}
                 className={clsx('p-4 rounded-xl w-80 shadow-2xl border backdrop-blur-xs',
                     themeClasses,
@@ -288,7 +298,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         <div className="flex items-center justify-between mb-4">
                             {
                                 showTitle && (
-                                    <h3 className="text-lg font-semibold">{title}</h3>
+                                    <h3 id="zenuicolorpicker-title" className="text-lg font-semibold">{title}</h3>
                                 )
                             }
                             <div className="flex items-center gap-2">
@@ -297,6 +307,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         <button
                                             disabled={disabled}
                                             type='button'
+                                            aria-label="Generate random color"
                                             onClick={generateRandomColor}
                                             className={clsx('p-2 rounded-lg transition-colors group cursor-pointer duration-200',
                                                 isDark ? 'hover:bg-gray-600 text-gray-200' : 'hover:bg-gray-100 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:hover:bg-gray-600 dark:text-gray-200 text-gray-600'
@@ -304,7 +315,10 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                             title="Generate random color"
                                         >
                                             <RotateCcw size={16}
-                                                       className='group-hover:rotate-[-90deg] transition-all duration-200'/>
+                                                       className={clsx(
+                                                           'transition-all duration-200',
+                                                           !disabled && 'group-hover:rotate-[-90deg]'
+                                                       )}/>
                                         </button>
                                     )
                                 }
@@ -320,6 +334,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                 color={currentColor}
                                 onChange={handleColorChange}
                                 size={220}
+                                disabled={disabled}
                             />
                         </div>
                     )
@@ -330,6 +345,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                         <HueBox
                             color={currentColor}
                             onChange={handleColorChange}
+                            disabled={disabled}
                         />
                     )
                 }
@@ -402,6 +418,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                             {presetColors.map((color, index) => (
                                 <button
                                     type='button'
+                                    role="button"
+                                    aria-label={`Select color ${color}`}
                                     key={index}
                                     disabled={disabled}
                                     onClick={() => {
@@ -433,6 +451,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                     <button
                                         type='button'
                                         key={index}
+                                        aria-label={`Select recent color ${color.hex}`}
                                         disabled={disabled}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => addToFavorites(color)}
@@ -464,6 +483,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                         type='button'
                                         key={index}
                                         disabled={disabled}
+                                        aria-label={`Add ${currentColorString} to favorites`}
                                         onClick={() => handleColorChange(color)}
                                         onDoubleClick={() => removeFromFavorites(color)}
                                         className={clsx('w-6 h-6 rounded-sm border border-gray-200 hover:scale-110 disabled:cursor-not-allowed transition-transform duration-200',
@@ -490,6 +510,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                                     className={clsx('w-8 h-8 rounded-lg border',
                                         isDark ? 'border-gray-700' : 'border-gray-200 dark:border-gray-700'
                                     )}
+                                    aria-hidden="true"
                                     style={{backgroundColor: currentColor.hex}}
                                 />
                                 <div className="flex-1">
