@@ -33,6 +33,7 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
 
         ctx.clearRect(0, 0, size, size);
 
+        // Draw hue wheel
         for (let angle = 0; angle < 360; angle += 1) {
             const startAngle = (angle - 0.5) * Math.PI / 180;
             const endAngle = (angle + 0.5) * Math.PI / 180;
@@ -87,6 +88,7 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
             ctx.fill();
         }
 
+        // Hue indicator
         const hueAngle = (color.hsv.h * Math.PI) / 180;
         const hueIndicatorRadius = (radius + innerRadius) / 2;
         const hueX = centerX + Math.cos(hueAngle) * hueIndicatorRadius;
@@ -100,6 +102,7 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Saturation & brightness indicator
         const saturationRadius = (color.hsv.s / 100) * circleRadius;
         const brightnessAngle = (color.hsv.v / 100) * Math.PI * 2;
         const satX = centerX + Math.cos(brightnessAngle) * saturationRadius;
@@ -119,65 +122,84 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
         drawColorWheel();
     }, [drawColorWheel]);
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isDraggingRef.current) return;
+    const getPointerCoords = (e: MouseEvent | Touch) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = 'clientX' in e ? e.clientX : 0;
+        const clientY = 'clientY' in e ? e.clientY : 0;
+        return {x: clientX - rect.left, y: clientY - rect.top};
+    };
 
+    const handlePointerMove = useCallback((e: MouseEvent | Touch) => {
+        if (!isDraggingRef.current) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const coords = getPointerCoords(e);
+        if (!coords) return;
 
         const centerX = size / 2;
         const centerY = size / 2;
         const radius = size / 2 - 10;
         const innerRadius = radius * 0.3;
 
-        const dx = x - centerX;
-        const dy = y - centerY;
+        const dx = coords.x - centerX;
+        const dy = coords.y - centerY;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance > innerRadius && distance < radius) {
             const angle = Math.atan2(dy, dx) * 180 / Math.PI;
             const hue = angle < 0 ? angle + 360 : angle;
-
             const {r, g, b} = hsvToRgb(hue, color.hsv.s, color.hsv.v);
-
-            const newColor = colorToValue(r, g, b, color.rgb.a);
-            onChange(newColor);
+            onChange(colorToValue(r, g, b, color.rgb.a));
         }
 
         const circleRadius = innerRadius - 5;
-
         if (distance <= circleRadius) {
             const saturation = Math.max(0, Math.min(100, (distance / circleRadius) * 100));
-
             const brightnessAngle = Math.atan2(dy, dx);
             const angleDegrees = brightnessAngle * 180 / Math.PI;
             const normalizedAngle = angleDegrees < 0 ? angleDegrees + 360 : angleDegrees;
             const brightness = Math.max(0, Math.min(100, (normalizedAngle / 360) * 100));
-
             const {r, g, b} = hsvToRgb(color.hsv.h, saturation, brightness);
-
-            const newColor = colorToValue(r, g, b, color.rgb.a);
-            onChange(newColor);
+            onChange(colorToValue(r, g, b, color.rgb.a));
         }
     }, [color, onChange, size]);
 
-    const handleMouseUp = useCallback(() => {
+    const handlePointerUp = useCallback(() => {
         isDraggingRef.current = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    }, [handleMouseMove]);
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('mouseup', handlePointerUp);
+        document.removeEventListener('touchmove', touchMoveHandler);
+        document.removeEventListener('touchend', handlePointerUp);
+    }, []);
 
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const mouseMoveHandler = (e: MouseEvent) => handlePointerMove(e);
+    const touchMoveHandler = (e: TouchEvent) => {
+        if (e.touches.length > 0) handlePointerMove(e.touches[0]);
+        e.preventDefault(); // prevent scrolling
+    };
+
+    const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+        if (disabled) return;
         isDraggingRef.current = true;
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
 
-        handleMouseMove(e.nativeEvent);
-    }, [handleMouseMove, handleMouseUp]);
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', handlePointerUp);
+        document.addEventListener('touchmove', touchMoveHandler, {passive: false});
+        document.addEventListener('touchend', handlePointerUp);
+
+        if ('touches' in e && e.touches.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            handlePointerMove(e.touches[0]);
+        } else if ('nativeEvent' in e) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            handlePointerMove(e.nativeEvent);
+        }
+    };
 
     return (
         <div className="flex justify-center">
@@ -185,7 +207,8 @@ export const WheelPicker: React.FC<ColorWheelProps> = ({
                 ref={canvasRef}
                 width={size}
                 height={size}
-                onMouseDown={handleMouseDown}
+                onMouseDown={handlePointerDown}
+                onTouchStart={handlePointerDown}
                 className={clsx(
                     'rounded-lg',
                     disabled ? 'cursor-not-allowed' : 'cursor-crosshair'

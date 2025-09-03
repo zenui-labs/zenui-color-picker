@@ -64,15 +64,11 @@ export const HueBox: React.FC<SVBoxProps> = ({
 
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, Math.PI * 2);
-
         ctx.shadowColor = "rgba(0,0,0,0.4)";
         ctx.shadowBlur = 6;
-
         ctx.fillStyle = color.hex;
         ctx.fill();
-
         ctx.shadowBlur = 0;
-
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#fff";
         ctx.stroke();
@@ -82,53 +78,62 @@ export const HueBox: React.FC<SVBoxProps> = ({
         drawSVBox();
     }, [drawSVBox]);
 
-    const getCoordinatesFromEvent = (e: MouseEvent | React.MouseEvent | WheelEvent) => {
+    const getCoordinatesFromEvent = (e: MouseEvent | React.MouseEvent | WheelEvent | Touch) => {
         if (!canvasRef.current) return null;
-
         const rect = canvasRef.current.getBoundingClientRect();
         const x = Math.max(0, Math.min(e.clientX - rect.left, width));
         const y = Math.max(0, Math.min(e.clientY - rect.top, height));
-
         return {x, y};
     };
 
     const updateColorFromCoordinates = (x: number, y: number) => {
         const s = Math.max(0, Math.min(100, (x / width) * 100));
         const v = Math.max(0, Math.min(100, 100 - (y / height) * 100));
-
         const {r, g, b} = hsvToRgb(color.hsv.h, s, v);
         onChange(colorToValue(r, g, b, color.rgb.a));
     };
 
     const handleMove = (e: MouseEvent) => {
         if (!isDraggingRef.current) return;
-
         const coords = getCoordinatesFromEvent(e);
+        if (coords) updateColorFromCoordinates(coords.x, coords.y);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        if (!isDraggingRef.current) return;
+        const touch = e.touches[0];
+        const coords = getCoordinatesFromEvent(touch);
         if (coords) {
             updateColorFromCoordinates(coords.x, coords.y);
+            e.preventDefault(); // Prevent scrolling while dragging
         }
     };
 
-    const handleDown = (e: React.MouseEvent) => {
-        e.preventDefault();
+    const handleDown = (e: React.MouseEvent | React.TouchEvent) => {
+        if (disabled) return;
         isDraggingRef.current = true;
 
-        const coords = getCoordinatesFromEvent(e);
-        if (coords) {
-            updateColorFromCoordinates(coords.x, coords.y);
-        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const coords = "touches" in e ? getCoordinatesFromEvent(e.touches[0]) : getCoordinatesFromEvent(e);
+        if (coords) updateColorFromCoordinates(coords.x, coords.y);
 
         const handleUp = () => {
             isDraggingRef.current = false;
             document.removeEventListener("mousemove", handleMove);
             document.removeEventListener("mouseup", handleUp);
+            document.removeEventListener("touchmove", handleTouchMove);
+            document.removeEventListener("touchend", handleUp);
         };
 
         document.addEventListener("mousemove", handleMove);
         document.addEventListener("mouseup", handleUp);
+        document.addEventListener("touchmove", handleTouchMove, {passive: false});
+        document.addEventListener("touchend", handleUp);
     };
 
     const handleWheel = (e: React.WheelEvent) => {
+        if (disabled) return;
         e.preventDefault();
 
         const coords = getCoordinatesFromEvent(e);
@@ -142,9 +147,9 @@ export const HueBox: React.FC<SVBoxProps> = ({
         let newV = color.hsv.v;
 
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            newV = Math.max(0, Math.min(100, color.hsv.v - (deltaY / scrollSensitivity)));
+            newV = Math.max(0, Math.min(100, color.hsv.v - deltaY / scrollSensitivity));
         } else {
-            newS = Math.max(0, Math.min(100, color.hsv.s + (deltaX / scrollSensitivity)));
+            newS = Math.max(0, Math.min(100, color.hsv.s + deltaX / scrollSensitivity));
         }
 
         const {r, g, b} = hsvToRgb(color.hsv.h, newS, newV);
@@ -152,6 +157,7 @@ export const HueBox: React.FC<SVBoxProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (disabled) return;
         const step = e.shiftKey ? 10 : 1;
         let newS = color.hsv.s;
         let newV = color.hsv.v;
@@ -186,6 +192,7 @@ export const HueBox: React.FC<SVBoxProps> = ({
             <canvas
                 ref={canvasRef}
                 onMouseDown={handleDown}
+                onTouchStart={handleDown}
                 onWheel={handleWheel}
                 onKeyDown={handleKeyDown}
                 tabIndex={0}
