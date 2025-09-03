@@ -2,9 +2,9 @@
   "name": "@zenuilabs/color-picker-react",
   "version": "1.0.5",
   "description": "A developer-friendly color picker with maximum customization ability also multiple variants and color format support",
-  "main": "dist-package/index.cjs.js",
-  "types": "dist-package/index.d.ts",
-  "module": "dist-package/index.es.js",
+  "main": "./build/index.cjs.js",
+  "types": "./build/index.d.ts",
+  "module": "./build/index.es.js",
   "type": "module",
   "scripts": {
     "dev": "vite",

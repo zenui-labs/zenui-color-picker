@@ -11,8 +11,6 @@ import {HueBox} from "./variants/hue-box";
 import FormatSelect from "./FormatSelect";
 import {clsx} from "clsx";
 
-console.log(useState)
-
 export const ColorPicker: React.FC<ColorPickerProps> = ({
                                                             value,
                                                             format = 'hex',

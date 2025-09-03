@@ -1,1 +1,6 @@
-!dist-package/**
+*
+
+!build/**
+!LICENSE
+!README.md
+!package.json
