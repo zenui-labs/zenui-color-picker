@@ -1,431 +1,266 @@
-# @zenuilabs/color-picker
+# @zenuilabs/color-picker-react
 
-A developer-friendly color picker component with TypeScript support, multiple interactive variants, and extensive
-customization options.
+A React color picker with six variants, alpha, five color formats, color harmonies, a contrast check, history and
+favorites. It has no runtime dependencies, and you theme it with plain CSS variables.
 
-## Live demo: https://color-picker.zenui.net/
+**Live demo:** https://color-picker.zenui.net/
 
-![showcase image](https://ik.imagekit.io/b2xymuik2/website%20preview%20image.png)
+![ColorPicker preview](https://ik.imagekit.io/b2xymuik2/website%20preview%20image.png)
 
-## Contents
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Examples](#examples)
+- [Props](#props)
+- [Other exports](#other-exports)
+- [Theming](#theming)
+- [Accessibility](#accessibility)
+- [Requirements](#requirements)
+- [Upgrading from 1.1](#upgrading-from-11)
+- [Contributing](#contributing)
 
-- [Features](#-features)
-- [Installation](#-installation)
-- [Quick Start](#-quick-start)
-- [Usage Examples](#-usage-examples)
-- [API Reference](#-api-reference)
-    - [ColorPicker](#colorpicker)
-    - [Types](#types)
-    - [Utilities](#utilities)
-- [Theming & Customization](#-theming--customization)
-- [Compatibility / Requirements](#-compatibility--requirements)
-- [FAQ](#-faq)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Support](#-support)
-
----
-
-## 🚀 Features
-
-- Multiple color formats: hex, rgb, hsl, hsv, cmyk
-- Interactive variants:
-    - Wheel picker
-    - Hue slider
-    - Hue box
-- Brightness/Value slider and fine-grained inputs
-- Format switcher and copy-friendly output
-- Favorites and quick presets
-- Color history and reset
-- Light/Dark themes with custom theme support
-- Fully typed with TypeScript
-- Accessible, keyboard-friendly interactions
-- Small and tree-shakeable
-
----
-
-## 📦 Installation
-
-Using npm:
+## Install
 
 ```bash
 npm install @zenuilabs/color-picker-react
 ```
 
----
+The stylesheet is imported for you when you import the component. If your setup strips CSS side effects, import it
+yourself:
 
-## ⚡ Quick Start
+```ts
+import '@zenuilabs/color-picker-react/style.css';
+```
+
+## Quick start
 
 ```tsx
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {ColorPicker} from '@zenuilabs/color-picker-react';
 
 export default function App() {
     const [color, setColor] = useState('#3B82F6');
 
-    return (
-        <div>
-            <ColorPicker
-                value={color}
-                format="hex"
-                variant="wheel"
-                onChange={(next) => setColor(next.hex)}
-            />
-            <p>Selected: {color}</p>
-        </div>
-    );
+    return <ColorPicker value={color} onChange={(next) => setColor(next.hex)}/>;
 }
 ```
 
----
+That renders a swatch button. Clicking it opens the picker in a popover. Pass `inline` to render the panel in place.
 
-## 🧪 Usage Examples
+## Examples
 
-Basic (HEX, wheel):
+**Inline hue box with a hue slider**
 
 ```tsx
-import React, {useState} from 'react';
-import {ColorPicker} from '@zenuilabs/color-picker-react';
-
-function BasicExample() {
-    const [color, setColor] = useState('#4F46E5');
-
-    return (
-        <ColorPicker
-            value={color}
-            format="hex"
-            variant="wheel"
-            onChange={(val) => setColor(val.hex)}
-        />
-    );
-}
+<ColorPicker
+    inline
+    variant="hue-box"
+    enableHueSlider
+    value={color}
+    onChange={(next) => setColor(next.hex)}
+/>
 ```
 
-Use picker as inline:
+**Every format at once.** `onChange` gives you a `ColorValue`, which carries the color in all five formats, plus the
+format currently selected in the picker.
 
 ```tsx
-import React, {useState} from 'react';
-import {ColorPicker} from '@zenuilabs/color-picker-react';
-
-function BasicExample() {
-    const [color, setColor] = useState('#4F46E5');
-
-    return (
-        <ColorPicker
-            value={color}
-            format="hex"
-            inline={true} // now the picker will render as inline
-            variant="wheel"
-            onChange={(val) => setColor(val.hex)}
-        />
-    );
-}
+<ColorPicker
+    value={color}
+    format="hsl"
+    onChange={(next, format) => {
+        next.hex;   // '#f59e0b'
+        next.rgb;   // { r: 245, g: 158, b: 11 }
+        next.hsl;   // { h: 38, s: 92, l: 50 }
+        next.hsv;   // { h: 38, s: 96, v: 96 }
+        next.cmyk;  // { c: 0, m: 36, y: 96, k: 4 }
+        setColor(next.hex);
+    }}
+/>
 ```
 
-Change format and access multiple representations:
+When alpha is below 1, `hex` has eight digits and `rgb` and `hsl` include `a`.
+
+**Your own trigger.** Any element works. The picker toggles when it is clicked.
 
 ```tsx
-import React, {useState} from 'react';
-import {ColorPicker, type ColorFormat} from '@zenuilabs/color-picker-react';
+const buttonRef = useRef<HTMLButtonElement>(null);
 
-function FormatExample() {
-    const [format, setFormat] = useState<ColorFormat>('rgb');
-    const [value, setValue] = useState('#22C55E');
-
-    return (
-        <div>
-            <ColorPicker
-                value={value}
-                format={format}
-                variant="hue-slider"
-                onChange={(val, fmt) => {
-                    // Persist a specific representation
-                    setValue(fmt === 'hex' ? val.hex : val.hex);
-                    // You can also handle the active format
-                    setFormat(fmt);
-                    console.log('As HEX:', val.hex);
-                    console.log('As RGB:', val.rgb);
-                    console.log('As HSL:', val.hsl);
-                    console.log('As HSV:', val.hsv);
-                    console.log('As CMYK:', val.cmyk);
-                }}
-            />
-        </div>
-    );
-}
+<button ref={buttonRef}>Brand color</button>
+<ColorPicker triggerRef={buttonRef} value={color} onChange={(next) => setColor(next.hex)}/>
 ```
 
-Hue box variant with presets, alpha, and history:
+**Spectrum, channel sliders or a palette grid**
 
 ```tsx
-import React, {useState} from 'react';
-import {ColorPicker} from '@zenuilabs/color-picker-react';
-
-const presetColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7B267', '#A78BFA'];
-
-function AdvancedExample() {
-    const [color, setColor] = useState('#F59E0B');
-
-    return (
-        <ColorPicker
-            value={color}
-            format="hsl"
-            variant="hue-box"
-            showAlpha
-            showHistory
-            showFormats
-            showCopyButton
-            presetColors={presetColors}
-            maxHistory={15}
-            onChange={(val) => setColor(val.hex)}
-        />
-    );
-}
+<ColorPicker inline variant="spectrum" value={color} onChange={(next) => setColor(next.hex)}/>
+<ColorPicker inline variant="sliders" value={color} onChange={(next) => setColor(next.hex)}/>
+<ColorPicker inline variant="swatches" value={color} onChange={(next) => setColor(next.hex)}/>
 ```
 
----
+**Harmonies and contrast**
 
-## 📚 API Reference
-
-### ColorPicker
-
-A controlled React component. Provide a `value` and handle updates via `onChange`.
-
-Props:
-
-| Prop              | Type                                             | Default             | Description                                                         |
-|-------------------|--------------------------------------------------|---------------------|---------------------------------------------------------------------|
-| value             | string or ColorValue                             | —                   | Current color value (commonly HEX like `#ffffff`).                  |
-| format            | ColorFormat                                      | 'hex'               | Active display/parse format: 'hex', 'rgb', 'hsl', 'hsv', or 'cmyk'. |
-| variant           | ColorPickerVariant                               | 'wheel'             | Visual variant: 'wheel', 'hue-slider', or 'hue-box'.                |
-| theme             | Themes or ColorPickerTheme                       | 'light'             | Built-in theme ('light' or 'dark').                                 |
-| disabled          | boolean                                          | false               | Disable all interactions.                                           |
-| showAlpha         | boolean                                          | true                | Enable alpha channel control and display when supported.            |
-| showHistory       | boolean                                          | true                | Track and display recently picked colors.                           |
-| showTitle         | boolean                                          | true                | Show a title of the picker.                                         |
-| showFormats       | boolean                                          | true                | Show the format selector (HEX/RGB/HSL/HSV/CMYK).                    |
-| showCopyButton    | boolean                                          | true                | Show a one-click copy to clipboard for the active format.           |
-| presetColors      | string[]                                         | defaultPresetColors | Quick-access swatches displayed below the picker.                   |
-| maxHistory        | number                                           | 10                  | Maximum number of items kept in color history.                      |
-| containerClasses  | string                                           | ''                  | Additional CSS classes for the root element.                        |
-| showColorInput    | boolean                                          | true                | Show an input field to enter color values manually.                 |
-| containerStyle    | React.CSSProperties                              | —                   | Inline styles for the root element.                                 |
-| popupClasses      | string                                           | —                   | Additional CSS classes for the popup/colorContainer element.        |
-| onChange          | (value: ColorValue, format: ColorFormat) => void | —                   | Called on any color change.                                         |
-| inline            | boolean                                          | false               | Render the picker inline rather than in a popup.                    |
-| title             | string                                           | 'Color Picker'      | Title text displayed on the picker.                                 |
-| enableHueSlider   | boolean                                          | false               | Enable the hue slider for variant that supports it.                 |
-| showPresets       | boolean                                          | true                | Show preset color swatches.                                         |
-| onFormatChange    | (format: ColorFormat) => void                    | —                   | Called when the active format changes.                              |
-| onOpen            | () => void                                       | —                   | Callback fired when the color picker opens.                         |
-| brandColor        | string                                           | —                   | Optional brand color used for styling or highlighting.              |
-| enableFavorite    | boolean                                          | false               | Enable marking colors as favorites.                                 |
-| enableShuffle     | boolean                                          | false               | Enable shuffle button for random colors.                            |
-| onClose           | () => void                                       | —                   | Callback fired when the color picker closes.                        |
-| triggerRef        | React.RefObject<HTMLElement>                     | —                   | External reference to trigger the picker popup.                     |
-| showDefaultButton | boolean                                          | true                | Show the default triggering button.                                 |
-
-Notes:
-
-- `ColorValue` includes every representation of the color (HEX, RGB, HSL, HSV, CMYK) so you can store or display any
-  format without re-conversion.
-- The component is designed to be controlled; keeping `value` in your state is recommended.
-
-### Types
-
-```ts
-export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk';
-export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box'
-export type Themes = 'light' | 'dark';
-
-export interface ColorValue {
-    hex: string;
-    rgb: { r: number; g: number; b: number; a?: number };
-    hsl: { h: number; s: number; l: number; a?: number };
-    hsv: { h: number; s: number; v: number; a?: number };
-    cmyk: { c: number; m: number; y: number; k: number };
-}
-
-export interface ColorPickerTheme {
-    primary: string;
-    secondary: string;
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-    borderHover: string;
-    shadow: string;
-}
-
-export interface ColorPickerProps {
-    value?: string;
-    format?: ColorFormat;
-    variant?: ColorPickerVariant;
-    theme?: Themes;
-    disabled?: boolean;
-    inline?: boolean;
-    showColorInput?: boolean;
-    showTitle?: boolean;
-    title?: string
-    popupClasses?: string;
-    showAlpha?: boolean;
-    showHistory?: boolean;
-    showFormats?: boolean;
-    showCopyButton?: boolean;
-    presetColors?: string[];
-    maxHistory?: number;
-    containerClasses?: string;
-    containerStyle?: React.CSSProperties;
-    onChange?: (color: ColorValue, format: ColorFormat) => void;
-    onFormatChange?: (format: ColorFormat) => void;
-    onOpen?: () => void;
-    onClose?: () => void;
-    enableHueSlider?: boolean;
-    brandColor?: string;
-    enableFavorite?: boolean;
-    showPresets?: boolean;
-    enableShuffle?: boolean;
-    triggerRef?: React.RefObject<HTMLElement>;
-    showDefaultButton?: boolean;
-}
-
-export interface UseColorPickerOptions {
-    initialColor?: string;
-    initialFormat?: ColorFormat;
-    showAlpha?: boolean;
-    maxHistory?: number;
-}
+```tsx
+<ColorPicker showHarmony showContrast value={color} onChange={(next) => setColor(next.hex)}/>
 ```
 
-### Utilities
+`showHarmony` adds a row of complementary, analogous, triadic, split complementary or tetradic colors. `showContrast`
+shows white and black text on the color with its WCAG ratio and grade (AAA, AA, AA large or Fail).
 
-Useful helpers are available for parsing and formatting colors.
+**Presets, shuffle, favorites and the eyedropper**
+
+```tsx
+<ColorPicker
+    value={color}
+    onChange={(next) => setColor(next.hex)}
+    presetColors={['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7B267', '#A78BFA']}
+    enableShuffle
+    enableFavorite
+    enableEyeDropper
+    maxHistory={15}
+/>
+```
+
+## Props
+
+| Prop                | Type                                               | Default               | Description                                                                                       |
+|---------------------|----------------------------------------------------|-----------------------|---------------------------------------------------------------------------------------------------|
+| `value`             | `string`                                           |                       | Any string `parseColor` understands: hex (3, 4, 6 or 8 digits), `rgb()`, `hsl()`, `hsv()`, `cmyk()`. |
+| `onChange`          | `(color: ColorValue, format: ColorFormat) => void` |                       | Fires on every user change. It does not fire when `value` changes from outside.                    |
+| `format`            | `ColorFormat`                                      | `'hex'`               | Format shown in the text field.                                                                   |
+| `onFormatChange`    | `(format: ColorFormat) => void`                    |                       | Fires when the user picks another format.                                                         |
+| `variant`           | `'wheel' \| 'hue-box' \| 'hue-slider' \| 'spectrum' \| 'sliders' \| 'swatches'` | `'wheel'` | Hue ring around a square, saturation box, hue slider only, hue-by-lightness spectrum, H/S/B channel sliders, or a 78 color palette grid. |
+| `theme`             | `'light' \| 'dark'`                                |                       | Pins the theme. Left out, the picker turns dark inside any element with a `dark` class.           |
+| `inline`            | `boolean`                                          | `false`               | Render the panel in place instead of in a popover.                                                |
+| `disabled`          | `boolean`                                          | `false`               | Disables every control.                                                                           |
+| `title`             | `string`                                           | `'Color Picker'`      | Heading text. Also the panel's accessible name.                                                   |
+| `showTitle`         | `boolean`                                          | `true`                | Show the heading.                                                                                 |
+| `showAlpha`         | `boolean`                                          | `true`                | Show the opacity slider.                                                                          |
+| `showFormats`       | `boolean`                                          | `true`                | Show the HEX / RGB / HSL / HSV / CMYK switch.                                                     |
+| `showColorInput`    | `boolean`                                          | `true`                | Show the text field.                                                                              |
+| `showCopyButton`    | `boolean`                                          | `true`                | Show the copy button inside the text field.                                                       |
+| `showPresets`       | `boolean`                                          | `true`                | Show preset swatches.                                                                             |
+| `presetColors`      | `string[]`                                         | `defaultPresetColors` | Preset swatches. Any parseable color string.                                                      |
+| `showHistory`       | `boolean`                                          | `true`                | Show recent colors. A color is recorded when a drag ends, not on every move.                      |
+| `maxHistory`        | `number`                                           | `10`                  | How many recent colors to keep.                                                                   |
+| `enableHueSlider`   | `boolean`                                          | `false`               | Add a hue slider under the wheel, hue box, spectrum or palette.                                   |
+| `showHarmony`       | `boolean`                                          | `false`               | Row of harmonious colors with five modes.                                                         |
+| `showContrast`      | `boolean`                                          | `false`               | White and black text on the color, with WCAG ratio and grade.                                     |
+| `enableFavorite`    | `boolean`                                          | `false`               | Heart button and a favorites row. Double-click a recent color to favorite it.                     |
+| `enableShuffle`     | `boolean`                                          | `false`               | Button that picks a random color.                                                                 |
+| `enableEyeDropper`  | `boolean`                                          | `false`               | Button that samples a color from the screen. Shown only where the EyeDropper API exists (Chromium). |
+| `brandColor`        | `string`                                           |                       | Accent for focus rings, the active format and the selected swatch. Same as setting `--zcp-accent`. |
+| `triggerRef`        | `RefObject<HTMLElement \| null>`                   |                       | Use your own element as the trigger.                                                              |
+| `showDefaultButton` | `boolean`                                          | `true`                | Render the built-in swatch button when there is no `triggerRef`.                                  |
+| `onOpen`            | `() => void`                                       |                       | Popover opened.                                                                                   |
+| `onClose`           | `() => void`                                       |                       | Popover closed (outside click, Escape or the trigger).                                            |
+| `containerClasses`  | `string`                                           |                       | Classes for the root element.                                                                     |
+| `containerStyle`    | `CSSProperties`                                    |                       | Inline styles for the root element. A good place for `--zcp-*` variables.                          |
+| `popupClasses`      | `string`                                           |                       | Classes for the panel, for example a width.                                                       |
+
+## Other exports
 
 ```ts
 import {
-    parseColor,
-    formatColorValue,
-    colorToValue,
-    hsvToRgb,
+    BrightnessSlider,     // the opacity slider on its own
+    ColorInput,           // the text field on its own
+    useColorPicker,       // format, history and favorites state
+    parseColor,           // string -> ColorValue | null
+    formatColorValue,     // (ColorValue, format) -> string
+    colorToValue,         // (r, g, b, a?) -> ColorValue
+    hexToRgb, rgbToHex, rgbToHsl, hslToRgb, rgbToHsv, hsvToRgb, rgbToCmyk, cmykToRgb,
+    getLuminance,         // WCAG relative luminance, for picking readable text
+    getContrastRatio,     // (a, b) -> 1..21
+    getHarmony,           // (color, 'complementary' | 'analogous' | 'triadic' | 'split' | 'tetradic') -> ColorValue[]
     defaultPresetColors,
-    type ColorValue,
-    type ColorFormat,
+    type ColorValue, type ColorFormat, type ColorPickerVariant, type ColorPickerProps, type Themes,
 } from '@zenuilabs/color-picker-react';
 ```
 
-- `parseColor(input: string): ColorValue` — Parses a string (HEX, RGB, HSL, etc.) into a full `ColorValue`.
-- `formatColorValue(value: ColorValue, format: ColorFormat): string` — Converts a `ColorValue` to a formatted string.
-- `colorToValue(input: string | ColorValue): ColorValue` — Normalizes arbitrary input to a `ColorValue`.
-- `hsvToRgb(h: number, s: number, v: number): { r: number; g: number; b: number }` — Low-level conversion utility.
-- `defaultPresetColors: string[]` — A ready-to-use list of common swatches.
+`parseColor` returns `null` for anything that is not a color. It accepts comma and space syntax, so
+`rgb(10, 20, 30)`, `rgb(10 20 30 / 50%)` and `hsl(200 80% 50%)` all work.
 
----
+## Theming
 
-## 🎨 Theming & Customization
+All styles sit in the `components` cascade layer and every class starts with `zcp-`. The package does not style
+anything outside the picker. Because the styles are layered, your own CSS and utility classes (Tailwind included)
+override them without `!important`.
 
-You can switch between built-in themes.
+Set these variables on `.zcp`, or pass them through `containerStyle`:
 
-Built-in theme:
+| Variable        | What it controls                          |
+|-----------------|-------------------------------------------|
+| `--zcp-accent`  | Focus rings, active format, selected swatch. Falls back to `--brand-color`. |
+| `--zcp-bg`      | Panel background                          |
+| `--zcp-surface` | Text field and format switch background   |
+| `--zcp-text`    | Main text                                 |
+| `--zcp-muted`   | Labels and icons                          |
+| `--zcp-border`  | Hairlines                                 |
+| `--zcp-shadow`  | Panel shadow                              |
+| `--zcp-radius`  | Panel corner radius                       |
+| `--zcp-font`    | Font family (inherits by default)         |
+| `--zcp-mono`    | Font for values and format labels         |
+
+```css
+.zcp {
+    --zcp-accent: #7c3aed;
+    --zcp-radius: 8px;
+    --zcp-font: "Inter", sans-serif;
+}
+```
 
 ```tsx
-<ColorPicker theme="dark"/>
+<ColorPicker containerStyle={{'--zcp-accent': '#7c3aed'} as React.CSSProperties}/>
 ```
 
-Presets:
+## Accessibility
 
-```tsx
-<ColorPicker presetColors={['#FF6B6B', '#4ECDC4', '#45B7D1']}/>
+- Every handle is a focusable `role="slider"` with a readable value. Arrow keys move by 1, Shift + arrows by 10.
+  Home, End, Page Up and Page Down work on the sliders.
+- The format switch is a radio group. Arrow keys move between formats.
+- In popover mode, Escape closes the panel and returns focus to the trigger.
+- Mouse, touch and pen all use pointer events with pointer capture, so a drag keeps working outside the control.
+- Animations are cut short when the visitor prefers reduced motion.
+
+## Requirements
+
+- React and React DOM 16.14 or newer (the automatic JSX runtime). Tested with 18 and 19.
+- A bundler that handles CSS imports (Vite, webpack, Next.js, Parcel and so on).
+- Modern browsers. The CSS uses cascade layers, `color-mix()` and conic gradients.
+
+## Upgrading from 1.1
+
+1.2 keeps the same props and exports. What changes:
+
+- **Dependencies.** 1.1 required `clsx` and `lucide-react` at runtime and listed React as a dependency. 1.2 has no
+  dependencies. React is only a peer.
+- **No global CSS.** 1.1 shipped Tailwind's full reset and global scrollbar styles, which restyled the host page.
+  1.2 only styles `zcp-` classes.
+- **New look.** The UI was redrawn. The wheel is now a hue ring around a saturation square, and the format menu is a
+  segmented switch.
+- **New.** Three more variants (`spectrum`, `sliders`, `swatches`), `showHarmony`, `showContrast`, `enableEyeDropper`,
+  and the `getHarmony` and `getContrastRatio` utilities.
+- **Copy button** falls back to a hidden text area when the async clipboard API is blocked.
+- **Fixes.** The initial `value` is no longer replaced by a pure hue on mount. Moving the hue keeps saturation and
+  brightness. Three-digit hex, `hsv()` and `cmyk()` typed into the field now work. An alpha of 0 is no longer read
+  as 1. Several pickers on one page no longer share element ids.
+- **Theme.** `theme="light"` now pins the light theme. Leave `theme` out to follow a `.dark` ancestor, which is what
+  the default did before.
+- **Types.** `triggerRef` accepts `RefObject<HTMLElement | null>`, so refs from React 19's `useRef(null)` type-check.
+  `ColorPickerVariant` and `Themes` are exported. `ColorPickerTheme` was never used and is now marked deprecated.
+- **Scrolling over the hue box** no longer changes the color.
+
+## Contributing
+
+```bash
+npm install
+npm run dev            # the demo site
+npm run lint
+npm run typecheck
+npm run build:package  # builds the library into build/
 ```
 
-Alpha channel:
+The library lives in `src/package`. The demo site lives in `src/demo` and imports the library from source.
 
-```tsx
-<ColorPicker showAlpha format="rgb"/>
-```
+## License
 
-History and favorites:
-
-```tsx
-<ColorPicker showHistory showFavorites maxHistory={12}/>
-```
-
----
-
-## ✅ Compatibility / Requirements
-
-- **React**: 16.8 or newer (Hooks support required; 18+ recommended)
-- **TypeScript**: 5.x recommended (type definitions included)
-- **Node.js**: 18+ recommended
-- **Module format**: ESM-first
-- **Browsers**: Modern browsers with standard Canvas and Pointer Events support
-
-> ⚠️ Note: Advanced features may rely on newer web APIs. Ensure your target browsers support them.
-
----
-
-## ❓ FAQ
-
-- Controlled vs. uncontrolled?
-    - The component is designed for controlled usage via `value` and `onChange`.
-- How to store colors?
-    - Store `ColorValue` if you need multiple formats. Otherwise, store a single string (e.g., `hex`) and derive other
-      formats when necessary.
-- Can I disable certain UI parts?
-    - Use the boolean props like `showFormats`, `showCopyButton`, `showHistory`, etc., to tailor the UI.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-- Fork the repository
-- Create a feature branch
-- Commit your changes with clear messages
-- Add/adjust tests where applicable
-- Submit a pull request describing your changes and rationale
-
-Before submitting:
-
-- Ensure linting and type checks pass
-- Ensure the demo/playground still works
-- Update documentation if props or behavior changed
-
----
-
-## 📄 License
-
-[MIT License](LICENSE)
-
----
-
-## 🆘 Support
-
-- Issues: open a ticket at https://github.com/zenui-labs/zenui-color-picker/issues/new
-- Contact: create an issue with details or reach us via your preferred channel
-
----
-
-## 🧾 Type Definitions
-
-This package ships with first-class TypeScript support. Types can be imported directly:
-
-```ts
-import type {
-    ColorFormat,
-    ColorValue,
-    ColorPickerVariant,
-    ColorPickerTheme,
-} from '@zenuilabs/color-picker-react';
-```
-
----
-
-## 🛠️ Release & Build
-
-- The package is published on npm as `@zenuilabs/color-picker-react`.
-- ESM build with tree-shaking-friendly structure.
-- CSS: no global stylesheet required; theming is provided via props and CSS variables.
-
-# A Product of [@zenui-labs](https://zenui.net)
+[MIT](LICENSE)

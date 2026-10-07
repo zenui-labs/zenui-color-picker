@@ -1,69 +1,758 @@
-@import 'tailwindcss';
+/*
+ * @zenuilabs/color-picker-react
+ *
+ * Every rule lives in the `components` cascade layer and every class starts
+ * with `zcp-`. Nothing here touches elements outside the picker, and your own
+ * CSS or utility classes override these styles without !important.
+ *
+ * Without a `theme` prop the picker turns dark inside any `.dark` ancestor.
+ * theme="light" or theme="dark" pins it.
+ *
+ * Theme it with custom properties on `.zcp`:
+ *   --zcp-accent  --zcp-bg  --zcp-surface  --zcp-text  --zcp-muted
+ *   --zcp-border  --zcp-shadow  --zcp-radius  --zcp-font  --zcp-mono
+ */
 
-@custom-variant dark (&:where(.dark, .dark *));
+@layer components {
+    .zcp,
+    .zcp-field:not(.zcp *),
+    .zcp-slider:not(.zcp *) {
+        --zcp-accent: var(--brand-color, #00aa45);
+        --zcp-bg: #fbfaf7;
+        --zcp-surface: #f0eee8;
+        --zcp-text: #1a1814;
+        --zcp-muted: #716b5f;
+        --zcp-border: rgba(26, 24, 20, 0.11);
+        --zcp-danger: #d93f3f;
+        --zcp-check-a: #e4e1da;
+        --zcp-check-b: #ffffff;
+        --zcp-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset,
+        0 2px 6px rgba(26, 24, 20, 0.05),
+        0 28px 56px -24px rgba(26, 24, 20, 0.38);
+        --zcp-radius: 18px;
+        --zcp-font: inherit;
+        --zcp-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        --zcp-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --zcp-check: repeating-conic-gradient(var(--zcp-check-a) 0 25%, var(--zcp-check-b) 0 50%);
+    }
 
-:root {
-    --brand-color: #00AA45;
-}
+    .dark :is(.zcp, .zcp-field:not(.zcp *), .zcp-slider:not(.zcp *)):not([data-zcp-theme="light"]),
+    :is(.zcp, .zcp-field:not(.zcp *))[data-zcp-theme="dark"] {
+        --zcp-bg: #171613;
+        --zcp-surface: #22201c;
+        --zcp-text: #f4f1ea;
+        --zcp-muted: #a39e92;
+        --zcp-border: rgba(244, 241, 234, 0.1);
+        --zcp-check-a: #3a3732;
+        --zcp-check-b: #2a2824;
+        --zcp-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset,
+        0 28px 56px -20px rgba(0, 0, 0, 0.7);
+    }
 
-@theme {
-    --color-accent: #00AA45;
-    --color-darkBg: oklch(13% 0.028 261.692);
-    --color-darkBorder: oklch(27.8% 0.033 256.848);
-    --color-darkText: oklch(96.7% 0.003 264.542);
-    --color-darkTextMuted: oklch(87.1% 0.006 286.286);
-    --shadow-darkShadow: 0 4px 16px rgba(255, 255, 255, 0.06);
-}
+    .zcp {
+        position: relative;
+        display: inline-block;
+        font-family: var(--zcp-font);
+        color: var(--zcp-text);
+        line-height: 1.4;
+    }
 
-* {
-    scroll-behavior: smooth;
-}
+    .zcp *,
+    .zcp *::before,
+    .zcp *::after {
+        box-sizing: border-box;
+    }
 
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
+    .zcp-checker {
+        background-size: auto, 10px 10px;
+    }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
+    /* ---------- trigger ---------- */
 
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
+    .zcp-trigger {
+        display: block;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        border-radius: 13px;
+        cursor: pointer;
+        background-image: linear-gradient(var(--zcp-swatch) 0 0), var(--zcp-check);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 3px var(--zcp-bg), 0 0 0 4px var(--zcp-border);
+        transition: transform 0.35s var(--zcp-spring), box-shadow 0.2s;
+    }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-}
+    .zcp-trigger:hover:not(:disabled) {
+        transform: rotate(-6deg) scale(1.05);
+    }
 
-@keyframes slideDown {
-    0% {
+    .zcp-trigger[aria-expanded="true"] {
+        transform: rotate(4deg) scale(0.96);
+    }
+
+    .zcp-trigger:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 3px var(--zcp-bg), 0 0 0 5px var(--zcp-accent);
+    }
+
+    .zcp-trigger:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    /* ---------- panel ---------- */
+
+    .zcp-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 320px;
+        max-width: 100%;
+        padding: 16px;
+        font-size: 13px;
+        color: var(--zcp-text);
+        background: var(--zcp-bg);
+        border: 1px solid var(--zcp-border);
+        border-radius: var(--zcp-radius);
+        box-shadow: var(--zcp-shadow);
+        outline: none;
+    }
+
+    .zcp--inline {
+        display: block;
+    }
+
+    .zcp-panel--floating {
+        position: fixed;
+        z-index: 2147483000;
+        max-width: calc(100vw - 16px);
+        transform-origin: top left;
+        animation: zcp-pop 0.26s var(--zcp-spring);
+    }
+
+    .zcp-panel--floating[data-side="top"] {
+        transform-origin: bottom left;
+    }
+
+    .zcp-panel[data-disabled] {
+        opacity: 0.6;
+    }
+
+    .zcp-panel[data-disabled] * {
+        cursor: not-allowed !important;
+    }
+
+    .zcp-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 30px;
+    }
+
+    .zcp-title {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    .zcp-actions {
+        display: flex;
+        gap: 2px;
+        margin-left: auto;
+    }
+
+    .zcp-icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 0;
+        border-radius: 9px;
+        color: var(--zcp-muted);
+        background: transparent;
+        cursor: pointer;
+        transition: color 0.15s, background-color 0.15s, transform 0.3s var(--zcp-spring);
+    }
+
+    .zcp-icon-btn:hover:not(:disabled) {
+        color: var(--zcp-text);
+        background: var(--zcp-surface);
+    }
+
+    .zcp-icon-btn:active:not(:disabled) {
+        transform: scale(0.88);
+    }
+
+    .zcp-icon-btn:focus-visible {
+        outline: 2px solid var(--zcp-accent);
+        outline-offset: 1px;
+    }
+
+    .zcp-icon-btn.is-on {
+        color: var(--zcp-danger);
+    }
+
+    .zcp-icon-btn.is-on svg {
+        animation: zcp-beat 0.45s var(--zcp-spring);
+    }
+
+    .zcp-icon-btn.is-done {
+        color: var(--zcp-accent);
+    }
+
+    .zcp-roll.is-rolling svg {
+        animation: zcp-roll 0.55s var(--zcp-spring);
+    }
+
+    /* ---------- thumbs ---------- */
+
+    .zcp-thumb {
+        --zcp-thumb-size: 20px;
+        position: absolute;
+        top: 50%;
+        left: calc(var(--zcp-thumb-size) / 2 + var(--zcp-pos, 0) * (100% - var(--zcp-thumb-size)));
+        z-index: 1;
+        width: var(--zcp-thumb-size);
+        height: var(--zcp-thumb-size);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        background-image: linear-gradient(var(--zcp-thumb-fill) 0 0), var(--zcp-check);
+        background-size: auto, 8px 8px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 3px 10px rgba(0, 0, 0, 0.28);
+        transform: translate(-50%, -50%);
+        transition: transform 0.3s var(--zcp-spring), box-shadow 0.2s;
+        cursor: grab;
+        touch-action: none;
+        outline: none;
+    }
+
+    .zcp-thumb:hover {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    [data-dragging] > .zcp-thumb {
+        transform: translate(-50%, -50%) scale(1.22);
+        cursor: grabbing;
+    }
+
+    .zcp-thumb:focus-visible {
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 0 0 6px color-mix(in srgb, var(--zcp-accent) 45%, transparent);
+    }
+
+    /* ---------- saturation area ---------- */
+
+    .zcp-area {
+        position: relative;
+        width: 100%;
+        border-radius: 12px;
+        touch-action: none;
+        cursor: crosshair;
+        background: linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
+        linear-gradient(to right, #fff, hsl(calc(var(--zcp-hue, 0) * 1deg) 100% 50%));
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .zcp-spectrum {
+        cursor: crosshair;
+        background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0) 50%, #000),
+        linear-gradient(to right, #f00, #ff0 16.66%, #0f0 33.33%, #0ff 50%, #00f 66.66%, #f0f 83.33%, #f00);
+    }
+
+    /* ---------- channel sliders ---------- */
+
+    .zcp-channels {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 4px 0;
+    }
+
+    .zcp-channel {
+        display: grid;
+        grid-template-columns: 14px 1fr 40px;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .zcp-channel-key {
+        font: 600 11px/1 var(--zcp-mono);
+        color: var(--zcp-muted);
+    }
+
+    .zcp-channel-value {
+        font: 500 12px/1 var(--zcp-mono);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- palette grid ---------- */
+
+    .zcp-grid {
+        display: grid;
+        grid-template-columns: repeat(var(--zcp-columns), 1fr);
+        gap: 3px;
+    }
+
+    .zcp-cell {
+        aspect-ratio: 1;
+        padding: 0;
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        background: var(--zcp-swatch);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.25s var(--zcp-spring), border-radius 0.25s;
+        animation: zcp-drop 0.45s var(--zcp-spring) var(--zcp-delay, 0ms) backwards;
+    }
+
+    .zcp-cell:hover:not(:disabled) {
+        position: relative;
+        z-index: 1;
+        transform: scale(1.35);
+        border-radius: 6px;
+    }
+
+    .zcp-cell.is-active {
+        position: relative;
+        z-index: 2;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px var(--zcp-bg), 0 0 0 4px var(--zcp-accent);
+    }
+
+    .zcp-cell:focus-visible {
+        outline: 2px solid var(--zcp-accent);
+        outline-offset: 1px;
+    }
+
+    /* ---------- harmony ---------- */
+
+    .zcp-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .zcp-chips {
+        display: flex;
+        gap: 2px;
+    }
+
+    .zcp-mini {
+        padding: 3px 6px;
+        border: 0;
+        border-radius: 6px;
+        font: 600 10px/1.2 var(--zcp-mono);
+        color: var(--zcp-muted);
+        background: none;
+        cursor: pointer;
+        transition: color 0.15s, background-color 0.15s;
+    }
+
+    .zcp-mini[aria-checked="true"] {
+        color: var(--zcp-text);
+        background: var(--zcp-surface);
+        box-shadow: inset 0 -2px 0 var(--zcp-accent);
+    }
+
+    .zcp-mini:focus-visible {
+        outline: 2px solid var(--zcp-accent);
+    }
+
+    .zcp-harmony {
+        display: flex;
+        height: 44px;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .zcp-harmony-chip {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        padding: 0 0 5px 7px;
+        border: 0;
+        cursor: pointer;
+        background-image: linear-gradient(var(--zcp-swatch) 0 0), var(--zcp-check);
+        transform-origin: left;
+        transition: flex-grow 0.35s var(--zcp-spring);
+        animation: zcp-unfold 0.5s var(--zcp-spring) var(--zcp-delay, 0ms) backwards;
+    }
+
+    .zcp-harmony-chip span {
+        font: 600 9px/1 var(--zcp-mono);
+        color: #fff;
+        text-transform: uppercase;
+        mix-blend-mode: difference;
         opacity: 0;
-        transform: translateY(-10px);
+        transition: opacity 0.2s;
     }
-    100% {
+
+    .zcp-harmony-chip:hover:not(:disabled),
+    .zcp-harmony-chip:focus-visible {
+        flex-grow: 2.2;
+        outline: none;
+    }
+
+    .zcp-harmony-chip:hover span,
+    .zcp-harmony-chip:focus-visible span,
+    .zcp-harmony-chip:disabled span {
         opacity: 1;
-        transform: translateY(0);
+    }
+
+    .zcp-harmony-chip:disabled {
+        cursor: default;
+    }
+
+    /* ---------- contrast ---------- */
+
+    .zcp-contrast {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .zcp-contrast-card {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        height: 38px;
+        padding: 0 10px;
+        border-radius: 11px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s;
+    }
+
+    .zcp-contrast-aa {
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .zcp-contrast-ratio {
+        font: 600 12px/1 var(--zcp-mono);
+    }
+
+    .zcp-contrast-grade {
+        margin-left: auto;
+        padding: 3px 5px;
+        border-radius: 5px;
+        font: 700 9px/1 var(--zcp-mono);
+        text-transform: uppercase;
+        color: var(--zcp-text);
+        background: var(--zcp-bg);
+    }
+
+    .zcp-contrast-grade[data-fail] {
+        color: #fff;
+        background: var(--zcp-danger);
+    }
+
+    /* ---------- wheel ---------- */
+
+    .zcp-wheel {
+        position: relative;
+        flex: none;
+        margin: 0 auto;
+        touch-action: none;
+    }
+
+    .zcp-wheel-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        cursor: pointer;
+        background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--zcp-ring) - 1px), #000 calc(100% - var(--zcp-ring)));
+        mask: radial-gradient(farthest-side, transparent calc(100% - var(--zcp-ring) - 1px), #000 calc(100% - var(--zcp-ring)));
+    }
+
+    .zcp-wheel-square {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 8px;
+        transform: translate(-50%, -50%);
+    }
+
+    /* ---------- sliders ---------- */
+
+    .zcp-slider {
+        position: relative;
+        height: 14px;
+        border-radius: 999px;
+        touch-action: none;
+        cursor: pointer;
+    }
+
+    .zcp-slider.zcp-checker {
+        background-image: var(--zcp-check);
+        background-size: 10px 10px;
+    }
+
+    .zcp-slider-fill {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .zcp-slider[data-disabled],
+    .zcp-area[data-disabled],
+    .zcp-wheel[data-disabled] {
+        cursor: not-allowed;
+    }
+
+    /* ---------- format tabs ---------- */
+
+    .zcp-tabs {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(var(--zcp-count), 1fr);
+        padding: 3px;
+        border-radius: 12px;
+        background: var(--zcp-surface);
+    }
+
+    .zcp-tabs-pill {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 3px;
+        width: calc((100% - 6px) / var(--zcp-count));
+        border-radius: 9px;
+        background: var(--zcp-bg);
+        box-shadow: 0 0 0 1px var(--zcp-border), 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 -2px 0 var(--zcp-accent);
+        transform: translateX(calc(var(--zcp-index) * 100%));
+        transition: transform 0.4s var(--zcp-spring);
+    }
+
+    .zcp-tab {
+        position: relative;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 9px;
+        font: 600 11px/1 var(--zcp-mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--zcp-muted);
+        background: none;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .zcp-tab[aria-checked="true"],
+    .zcp-tab:hover:not(:disabled) {
+        color: var(--zcp-text);
+    }
+
+    .zcp-tab:focus-visible {
+        outline: 2px solid var(--zcp-accent);
+        outline-offset: -2px;
+    }
+
+    /* ---------- readout ---------- */
+
+    .zcp-readout {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .zcp-chip {
+        flex: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background-image: linear-gradient(var(--zcp-swatch) 0 0), var(--zcp-check);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.2s;
+    }
+
+    .zcp-field {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .zcp-input {
+        width: 100%;
+        height: 38px;
+        margin: 0;
+        padding: 0 40px 0 12px;
+        font: 500 13px/1 var(--zcp-mono, ui-monospace, monospace);
+        color: var(--zcp-text);
+        background: var(--zcp-surface);
+        border: 1px solid transparent;
+        border-radius: 11px;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+    }
+
+    .zcp-input:focus {
+        background: var(--zcp-bg);
+        border-color: var(--zcp-accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--zcp-accent) 22%, transparent);
+    }
+
+    .zcp-input:disabled {
+        cursor: not-allowed;
+    }
+
+    .zcp-field[data-invalid] .zcp-input {
+        border-color: var(--zcp-danger);
+        background: color-mix(in srgb, var(--zcp-danger) 8%, var(--zcp-bg));
+        animation: zcp-shake 0.3s;
+    }
+
+    .zcp-field .zcp-icon-btn {
+        position: absolute;
+        top: 50%;
+        right: 4px;
+        transform: translateY(-50%);
+    }
+
+    .zcp-field .zcp-icon-btn:active:not(:disabled) {
+        transform: translateY(-50%) scale(0.88);
+    }
+
+    /* ---------- swatches ---------- */
+
+    .zcp-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .zcp-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--zcp-muted);
+    }
+
+    .zcp-swatches {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(25px, 1fr));
+        gap: 6px;
+    }
+
+    .zcp-swatch {
+        width: 100%;
+        aspect-ratio: 1;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        background-image: linear-gradient(var(--zcp-swatch) 0 0), var(--zcp-check);
+        background-size: auto, 8px 8px;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s var(--zcp-spring), box-shadow 0.2s;
+    }
+
+    .zcp-swatches--small {
+        grid-template-columns: repeat(auto-fill, minmax(19px, 1fr));
+        gap: 5px;
+    }
+
+    .zcp-swatches--small .zcp-swatch {
+        border-radius: 6px;
+        animation: zcp-drop 0.4s var(--zcp-spring) backwards;
+    }
+
+    .zcp-swatch:hover:not(:disabled) {
+        transform: translateY(-2px) rotate(-6deg);
+    }
+
+    .zcp-swatch.is-active {
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 2px var(--zcp-bg), 0 0 0 4px var(--zcp-accent);
+    }
+
+    .zcp-swatch:focus-visible {
+        outline: 2px solid var(--zcp-accent);
+        outline-offset: 2px;
+    }
+
+    .zcp-swatch:disabled {
+        cursor: not-allowed;
+    }
+
+    .zcp-draw {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        animation: zcp-draw 0.35s 0.05s ease-out forwards;
+    }
+
+    .zcp-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .zcp *,
+        .zcp-trigger,
+        .zcp-panel {
+            animation-duration: 1ms !important;
+            transition-duration: 1ms !important;
+        }
     }
 }
 
-.animate-slideDown {
-    animation: slideDown 0.1s ease-out forwards;
-}
-
-@keyframes slideUp {
-    0% {
+@keyframes zcp-pop {
+    from {
         opacity: 0;
-        transform: translateY(10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
+        transform: scale(0.92) translateY(-4px);
     }
 }
 
-.animate-slideUp {
-    animation: slideUp 0.1s ease-out forwards;
+@keyframes zcp-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.6);
+    }
+}
+
+@keyframes zcp-unfold {
+    from {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes zcp-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes zcp-roll {
+    50% {
+        transform: rotate(200deg) scale(0.8);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes zcp-beat {
+    40% {
+        transform: scale(1.35);
+    }
+}
+
+@keyframes zcp-shake {
+    25% {
+        transform: translateX(-3px);
+    }
+    75% {
+        transform: translateX(3px);
+    }
 }

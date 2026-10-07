@@ -1,122 +1,144 @@
-import {ArrowRight, Check, Copy, Github} from "lucide-react"
-import {useState} from "react"
-import {ColorPicker} from "../../package";
+import {CSSProperties, PointerEvent, useEffect, useRef, useState} from "react";
+import {ColorPicker, getLuminance} from "../../package";
+import {ArrowGlyph, CropMarks, Drip, RegMark} from "../lib/art";
+import {useInk} from "../lib/ink-context";
+import {nearestColorName} from "../lib/colorNames";
+import {InstallTape} from "../components/InstallTape";
+import {Parallax} from "../lib/reveal";
+import {Link} from "../lib/link";
 
-const Hero = () => {
-    const [copied, setCopied] = useState(false)
-    const [activeFramework, setActiveFramework] = useState("react")
-    const [currentColor, setCurrentColor] = useState("#00AA45")
-    const [prevColor, setPrevColor] = useState("#00AA45")
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }
-
-    const installCommands = {
-        npm: {
-            react: "npm install @zenuilabs/color-picker-react",
-            vue: "coming soon",
-        },
-    }
-
-    const currentCommand =
-        installCommands['npm' as keyof typeof installCommands][activeFramework as keyof typeof installCommands.npm]
-
-    const handleColorChange = (color: { hex: string }) => {
-        setPrevColor(currentColor)
-        setCurrentColor(color.hex)
-    }
+/** A paint sample card that names whatever is picked. */
+const PaintChip = () => {
+    const {color} = useInk();
+    const {name, exact} = nearestColorName(color.rgb);
+    const lrv = Math.round(getLuminance(color) * 100);
 
     return (
-        <section id="home"
-                 className="pt-24 px-6 lg:px-0 flex-col lg:flex-row flex max-w-[1200px] justify-between items-center min-h-screen gap-[50px] lg:gap-[100px] mx-auto pb-20">
-            <div className="space-y-8 max-w-[650px]">
-                <div className="space-y-4">
-                    <h1 className="text-[3rem] lg:text-[3.5rem] font-bold dark:text-darkText text-gray-900 leading-tight">
-                        The Most Customizable
-                        <span
-                            className="block text-transparent bg-clip-text transition-all duration-500"
-                            style={{
-                                backgroundImage: `linear-gradient(to right, ${prevColor}, ${currentColor})`,
-                            }}
-                        >
-                            Color Picker Ever
-                        </span>
-                    </h1>
-
-                    <p className="text-base lg:text-xl dark:text-darkTextMuted text-gray-600 leading-relaxed">
-                        A powerful, design-grade color picker that blends beauty with functionality. With extensive
-                        customization, accessibility features, and theming support, it’s the only color tool your app
-                        will ever need.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row mt-12 gap-4">
-                        <a
-                            href='https://www.npmjs.com/package/@zenuilabs/color-picker-react'
-                            target='_blank'
-                            type='button'
-                            className="flex cursor-pointer items-center justify-center px-8 py-3 bg-accent hover:bg-accent/90 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl group">
-                            Get Started
-                            <ArrowRight className="w-5 h-5 ml-2 group-hover:ml-3 transition-all duration-200"/>
-                        </a>
-                        <a href='https://github.com/zenui-labs/zenui-color-picker'
-                           target='_blank'
-                           className="flex cursor-pointer items-center dark:border-darkBorder dark:hover:bg-gray-800 justify-center px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 dark:text-darkText transition-colors">
-                            <Github className="w-5 h-5 mr-2"/>
-                            View on GitHub
-                        </a>
-                    </div>
+        <figure
+            className="pointer-events-none relative w-[190px] rounded-[22px] border border-line bg-card p-3 shadow-[0_30px_60px_-30px_rgba(0,0,0,.45)]">
+            <div className="relative h-[200px] overflow-hidden rounded-[14px] bg-ink transition-colors duration-500">
+                <span className="absolute left-1/2 top-3 size-4 -translate-x-1/2 rounded-full border border-black/10 bg-card"/>
+                <span className="sheen absolute inset-0"/>
+            </div>
+            <figcaption className="px-1 pb-1 pt-3">
+                <div className="display break-words text-[1.65rem] leading-none">
+                    {exact ? '' : <span className="text-muted">near </span>}{name}
                 </div>
+                <dl className="mt-3 grid grid-cols-2 gap-y-1 font-mono text-[11px] text-muted">
+                    <dt>code</dt>
+                    <dd className="text-right text-text">ZCP {color.hex.slice(1, 7).toUpperCase()}</dd>
+                    <dt>LRV</dt>
+                    <dd className="text-right text-text">{lrv}</dd>
+                </dl>
+            </figcaption>
+        </figure>
+    );
+};
 
-                <div
-                    className="bg-white border mt-12 border-gray-200 dark:shadow-darkShadow shadow-lg dark:bg-darkBg dark:border-darkBorder rounded-xl overflow-hidden">
-                    <div className="flex border-b border-gray-200 dark:border-darkBorder dark:bg-gray-900 bg-gray-100">
-                        {["react", "vue"].map((framework) => (
-                            <button
-                                type='button'
-                                key={framework}
-                                onClick={() => setActiveFramework(framework)}
-                                className={`px-4 py-3 cursor-pointer text-sm border-b-2 border-transparent font-medium capitalize transition-colors ${
-                                    activeFramework === framework
-                                        ? "bg-white dark:bg-gray-800 text-accent !border-accent"
-                                        : "text-gray-600 hover:text-gray-900 dark:hover:text-darkText dark:text-darkTextMuted"
-                                }`}
-                            >
-                                {framework}
-                            </button>
-                        ))}
+/** Letters that hop and take a hue when the pointer passes over them. */
+const Bouncy = ({text, offset = 0}: { text: string; offset?: number }) => (
+    <span aria-hidden="true">
+        {Array.from(text).map((ch, i) => (
+            <span key={i} className="letter"
+                  style={{'--i': i + offset, '--r': `${((i * 37) % 17) - 8}deg`} as CSSProperties}>
+                {ch === ' ' ? ' ' : ch}
+            </span>
+        ))}
+    </span>
+);
+
+const Hero = () => {
+    const {color, setInk, remember} = useInk();
+    const [dripKey, setDripKey] = useState(0);
+    const sectionRef = useRef<HTMLElement>(null);
+
+    // Settle: once the color stops moving, add it to the visit palette and replay the drip.
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            remember(color.hex.slice(0, 7));
+            setDripKey(k => k + 1);
+        }, 650);
+        return () => clearTimeout(timer);
+    }, [color.hex, remember]);
+
+    const tilt = (e: PointerEvent<HTMLElement>) => {
+        const el = sectionRef.current;
+        if (!el || e.pointerType !== 'mouse') return;
+        const rect = el.getBoundingClientRect();
+        el.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 2 - 1).toFixed(3));
+        el.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 2 - 1).toFixed(3));
+    };
+
+    return (
+        <section id="top" ref={sectionRef} onPointerMove={tilt}
+                 className="relative overflow-hidden pt-16">
+
+            <div className="relative mx-auto max-w-[1240px] px-4 pb-20 pt-10 sm:px-6 lg:pb-28 lg:pt-16">
+                <CropMarks/>
+                <RegMark className="spin-slow absolute right-6 top-6 hidden size-6 text-[var(--line-strong)] lg:block"/>
+
+                <div className="grid items-center gap-14 lg:grid-cols-[1fr_auto] lg:gap-12">
+                    <div>
+                        <h1 aria-label="Pick colors in any format, styled your way."
+                            className="display rise text-[clamp(2.6rem,10.4vw,5.6rem)] lg:text-[clamp(3rem,6vw,6.4rem)]">
+                            <span><span><Bouncy text="Pick colors"/></span></span>
+                            <span><span><Bouncy text="in any format," offset={11}/></span></span>
+                            <span className="pb-[.45em]!">
+                                <span>
+                                    <em aria-hidden="true"
+                                        className="relative inline-block whitespace-nowrap text-ink transition-colors duration-300">
+                                        styled your way.
+                                        <Drip key={dripKey}
+                                              className="absolute left-[1%] top-[98%] h-[.34em] w-[96%]"/>
+                                    </em>
+                                </span>
+                            </span>
+                        </h1>
+
+                        <p className="fade-up in-view mt-2 max-w-[34rem] text-lg leading-relaxed text-muted [--delay:.25s] sm:text-xl">
+                            Six picker variants, alpha, harmonies, a contrast check and an on-screen eyedropper.
+                            One React component with no runtime dependencies, themed with plain CSS variables.
+                        </p>
+
+                        <div className="fade-up in-view mt-10 flex flex-col gap-6 [--delay:.35s] sm:flex-row sm:items-center">
+                            <InstallTape/>
+                            <Link to="/features/variants" className="group inline-flex items-center gap-2 text-[15px] font-medium">
+                                <span className="border-b border-line pb-0.5 transition-colors group-hover:border-text">Tour the features</span>
+                                <ArrowGlyph className="size-5 transition-transform duration-300 group-hover:translate-x-1"/>
+                            </Link>
+                        </div>
+
                     </div>
 
-                    <div className="flex items-center justify-between text-green-600 p-4">
-                        <code className="text-sm font-mono flex-1">
-                            <span className="text-gray-500">$</span> {currentCommand}
-                        </code>
-                        <button
-                            type='button'
-                            onClick={() => copyToClipboard(currentCommand)}
-                            className="p-2 text-gray-400 transition-colors rounded-md dark:hover:bg-gray-800  hover:bg-gray-200"
-                            title="Copy to clipboard"
-                        >
-                            {copied ? <Check className="w-4 h-4 text-green-400"/> :
-                                <Copy className="w-4 h-4 cursor-pointer"/>}
-                        </button>
+                    <div className="flex items-start justify-center gap-6">
+                        <Parallax speed={-0.12} className="mt-20 hidden xl:block">
+                            <div className="tilt">
+                                <div className="float">
+                                    <PaintChip/>
+                                </div>
+                            </div>
+                        </Parallax>
+                        <div className="w-full max-w-[380px] sm:w-[380px]">
+                            <ColorPicker
+                                inline
+                                value={color.hex}
+                                onChange={(next) => setInk(next)}
+                                variant="hue-box"
+                                enableHueSlider
+                                enableShuffle
+                                enableFavorite
+                                enableEyeDropper
+                                showContrast
+                                title="Mix something"
+                                containerClasses="w-full"
+                                popupClasses="w-full"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <ColorPicker
-                onChange={handleColorChange}
-                inline
-                containerClasses={'w-full'}
-                variant={'hue-box'}
-                showHistory={false}
-                enableHueSlider
-                popupClasses={"border-gray-200 w-full lg:w-[420px]"}
-            />
         </section>
-    )
-}
+    );
+};
 
-export default Hero
+export default Hero;

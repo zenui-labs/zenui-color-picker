@@ -1,0 +1,681 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --paper: #f3f0e8;
+    --card: #fbfaf6;
+    --text: #1a1814;
+    --muted: #6b665b;
+    --soft: #e8e4d9;
+    --line: rgba(26, 24, 20, 0.12);
+    --line-strong: rgba(26, 24, 20, 0.35);
+    --ink: #00aa45;
+    --ink-on: #fbfaf6;
+    color-scheme: light;
+}
+
+.dark {
+    --paper: #0f0e0c;
+    --card: #181714;
+    --text: #f1ede4;
+    --muted: #9b9588;
+    --soft: #1f1d1a;
+    --line: rgba(241, 237, 228, 0.1);
+    --line-strong: rgba(241, 237, 228, 0.3);
+    color-scheme: dark;
+}
+
+@theme {
+    --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+    --color-paper: var(--paper);
+    --color-card: var(--card);
+    --color-text: var(--text);
+    --color-muted: var(--muted);
+    --color-soft: var(--soft);
+    --color-line: var(--line);
+    --color-ink: var(--ink);
+    --color-ink-on: var(--ink-on);
+
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 5rem;
+    }
+
+    body {
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--text);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        transition: background-color 0.4s, color 0.4s;
+    }
+
+    /* Paper grain. A static tile, so scrolling stays cheap. */
+    body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        pointer-events: none;
+        opacity: 0.06;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .dark body::after {
+        filter: invert(1);
+        opacity: 0.05;
+    }
+
+    ::selection {
+        background: var(--ink);
+        color: var(--ink-on);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 3px;
+    }
+}
+
+/* The site themes the picker the same way a consumer would. */
+.zcp {
+    --zcp-font: var(--font-sans);
+    --zcp-mono: var(--font-mono);
+}
+
+.display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-optical-sizing: auto;
+    letter-spacing: -0.045em;
+    line-height: 0.95;
+}
+
+/* No italics in Bricolage: emphasis goes condensed and heavy instead. */
+.display em {
+    font-style: normal;
+    font-weight: 800;
+    font-variation-settings: "wdth" 75;
+    letter-spacing: -0.03em;
+}
+
+.ink-fade {
+    transition: fill 0.35s;
+}
+
+/* ---------- reveal on load / on scroll ---------- */
+
+.rise > span {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+}
+
+.rise > span > span {
+    display: block;
+    animation: rise 0.9s var(--ease-out-soft) backwards;
+}
+
+.rise > span:nth-child(2) > span {
+    animation-delay: 0.08s;
+}
+
+.rise > span:nth-child(3) > span {
+    animation-delay: 0.16s;
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(105%) rotate(2deg);
+    }
+}
+
+.fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s var(--ease-out-soft), transform 0.8s var(--ease-out-soft);
+    transition-delay: var(--delay, 0s);
+}
+
+.in-view .fade-up,
+.fade-up.in-view {
+    opacity: 1;
+    transform: none;
+}
+
+/* ---------- drip under the hero word ---------- */
+
+.drip {
+    transform-origin: top;
+    animation: drip 1.4s var(--ease-out-soft) both;
+    transition: fill 0.35s;
+}
+
+@keyframes drip {
+    from {
+        transform: scaleY(0.15);
+    }
+}
+
+/* ---------- label-maker tape ---------- */
+
+.tape {
+    position: relative;
+    background: var(--ink);
+    color: var(--ink-on);
+    clip-path: polygon(0 6%, 2% 0, 98% 3%, 100% 0, 99% 50%, 100% 100%, 97% 96%, 3% 100%, 0 96%, 1% 50%);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+    transition: background-color 0.35s, color 0.35s, transform 0.4s var(--ease-spring);
+}
+
+.tape::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 45%, rgba(0, 0, 0, 0.08));
+    pointer-events: none;
+}
+
+.tape-text {
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25), 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.stamp {
+    animation: stamp 0.5s var(--ease-spring);
+}
+
+@keyframes stamp {
+    from {
+        opacity: 0;
+        transform: scale(1.8) rotate(-14deg);
+    }
+}
+
+/* ---------- fan deck ---------- */
+
+.fan {
+    --spread: 0;
+}
+
+.fan.in-view {
+    --spread: 1;
+}
+
+.fan-chip {
+    --lift: 0px;
+    transform-origin: 50% calc(100% - 24px);
+    transform: rotate(calc((var(--i) - var(--mid)) * var(--spread) * var(--step))) translateY(var(--lift));
+    transition: transform 1s var(--ease-spring), filter 0.4s, opacity 0.4s;
+    transition-delay: calc(var(--i) * 40ms), 0s, 0s;
+}
+
+.fan[data-has-active] .fan-chip:not([data-active]) {
+    filter: saturate(0.55) brightness(0.92);
+}
+
+.fan-chip[data-active] {
+    --lift: -34px;
+    transition-delay: 0s;
+}
+
+/* ---------- feature card ---------- */
+
+.feature-band {
+    background: var(--chip);
+    transition: background-color 0.6s var(--ease-out-soft);
+}
+
+.band-swirl {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 68%);
+    animation: swirl 1.1s var(--ease-spring) both;
+}
+
+.band-swirl--late {
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0) 70%);
+    animation-delay: 0.08s;
+}
+
+@keyframes swirl {
+    from {
+        transform: scale(0.2) translate(30%, 20%);
+        opacity: 0;
+    }
+}
+
+.countdown {
+    animation: countdown var(--ms) linear forwards;
+}
+
+@keyframes countdown {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.feature-card {
+    transition: transform 0.6s var(--ease-spring);
+}
+
+.feature-card:hover {
+    transform: rotate(-0.6deg);
+}
+
+/* ---------- megamenu ---------- */
+
+.mega-panel {
+    transform-origin: top center;
+    animation: mega-open 0.42s var(--ease-spring);
+}
+
+@keyframes mega-open {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.96);
+    }
+}
+
+.mega-box {
+    transition: height 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.mega-caret {
+    transition: left 0.45s var(--ease-spring);
+}
+
+/* Items wave in one after another. */
+.mega-item {
+    animation: mega-wave 0.6s var(--ease-spring) backwards;
+}
+
+@keyframes mega-wave {
+    from {
+        opacity: 0;
+        transform: translate(calc(var(--dir, 0) * 26px), 10px);
+    }
+}
+
+.mega-in {
+    animation: mega-slide-in 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.mega-out {
+    animation: mega-slide-out 0.36s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes mega-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(calc(var(--dir) * 70px));
+    }
+}
+
+@keyframes mega-slide-out {
+    to {
+        opacity: 0;
+        transform: translateX(calc(var(--dir) * -70px));
+    }
+}
+
+.fade-swap {
+    animation: fade-swap 0.3s ease-out;
+}
+
+@keyframes fade-swap {
+    from {
+        opacity: 0;
+    }
+}
+
+/* ---------- misc ---------- */
+
+.float {
+    animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+    50% {
+        transform: translateY(-10px) rotate(-1deg);
+    }
+}
+
+.no-scrollbar {
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ---------- hero: hopping letters ---------- */
+
+.letter {
+    display: inline-block;
+    transition: transform 0.5s var(--ease-spring), color 0.3s;
+}
+
+.letter:hover {
+    color: hsl(calc(var(--ink-h) + var(--i) * 33) 75% 52%);
+    transform: translateY(-0.14em) rotate(var(--r)) scale(1.08);
+    transition-duration: 0.18s;
+}
+
+/* ---------- tilt card follows the pointer ---------- */
+
+.tilt {
+    perspective: 900px;
+}
+
+.tilt figure {
+    transform: rotateY(calc(var(--mx, 0) * 14deg)) rotateX(calc(var(--my, 0) * -10deg)) rotate(-6deg);
+    transition: transform 0.6s var(--ease-out-soft);
+}
+
+.sheen {
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.35) 45%, transparent 60%);
+    background-size: 250% 100%;
+    background-position: calc(50% + var(--mx, 0) * 60%) 0;
+    mix-blend-mode: soft-light;
+}
+
+.spin-slow {
+    animation: spin 18s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- roller reveal ---------- */
+
+.roller {
+    position: relative;
+    width: fit-content;
+}
+
+.roller-text {
+    display: block;
+    opacity: 0;
+}
+
+.roller::after {
+    content: "";
+    position: absolute;
+    inset: 0 -0.08em;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+}
+
+.roller.in-view .roller-text {
+    animation: roll-text 1.1s var(--delay, 0s) forwards;
+}
+
+.roller.in-view::after {
+    animation: roll-bar 1.1s cubic-bezier(0.7, 0, 0.2, 1) var(--delay, 0s) forwards;
+}
+
+@keyframes roll-bar {
+    0% {
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+    46% {
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+    54% {
+        transform: scaleX(1);
+        transform-origin: right;
+    }
+    100% {
+        transform: scaleX(0);
+        transform-origin: right;
+    }
+}
+
+@keyframes roll-text {
+    0%, 49% {
+        opacity: 0;
+    }
+    50%, 100% {
+        opacity: 1;
+    }
+}
+
+/* ---------- page change: ink rises, the new page lands, ink leaves ---------- */
+
+.wipe {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    background: var(--ink);
+    transform: translateY(100%);
+}
+
+[data-wipe="in"] .wipe {
+    animation: wipe-in 0.42s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+
+[data-wipe="out"] .wipe {
+    animation: wipe-out 0.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+
+@keyframes wipe-in {
+    from {
+        transform: translateY(100%);
+        border-radius: 50% 50% 0 0 / 12% 12% 0 0;
+    }
+    to {
+        transform: translateY(0);
+        border-radius: 0;
+    }
+}
+
+@keyframes wipe-out {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-100%);
+        border-radius: 0 0 50% 50% / 0 0 12% 12%;
+    }
+}
+
+.page-enter {
+    animation: page-enter 0.7s var(--ease-out-soft);
+}
+
+@keyframes page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+}
+
+.swap-in {
+    animation: swap-in 0.5s var(--ease-out-soft);
+}
+
+@keyframes swap-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+        filter: blur(4px);
+    }
+}
+
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.6) rotate(-8deg);
+    }
+}
+
+/* ---------- variant cards lean toward the pointer ---------- */
+
+.variant-card {
+    transition: transform 0.5s var(--ease-spring), border-color 0.3s, opacity 0.8s var(--ease-out-soft);
+}
+
+.variant-card:hover {
+    border-color: var(--line-strong);
+}
+
+/* ---------- next / previous feature ---------- */
+
+.next-chip-fill {
+    background: var(--chip);
+    transform: translateY(101%);
+    transition: transform 0.6s var(--ease-out-soft);
+}
+
+.next-chip:hover .next-chip-fill,
+.next-chip:focus-visible .next-chip-fill {
+    transform: translateY(0);
+}
+
+/* ---------- footer ---------- */
+
+.footer {
+    background: color-mix(in srgb, var(--ink) 9%, #0d0c0a);
+    transition: background-color 0.5s;
+}
+
+.footer-drip {
+    transform-origin: top;
+    animation: drip-breathe 3.6s ease-in-out var(--d, 0s) infinite alternate;
+}
+
+@keyframes drip-breathe {
+    from {
+        transform: scaleY(0.72);
+    }
+    to {
+        transform: scaleY(1.08);
+    }
+}
+
+.footer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    color: #f3f0e8;
+    background: rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    transition: background-color 0.25s, color 0.25s, transform 0.4s var(--ease-spring);
+}
+
+.footer-pill:hover {
+    color: var(--ink-on);
+    background: var(--ink);
+    transform: translateY(-2px);
+}
+
+.paint-wall {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    color: #fff;
+    mix-blend-mode: difference;
+}
+
+.wordmark em {
+    font-style: normal;
+    font-weight: 800;
+    font-variation-settings: "wdth" 75;
+}
+
+.footer-link {
+    position: relative;
+    color: #f3f0e8;
+    background: linear-gradient(var(--ink), var(--ink)) no-repeat 0 100% / 0 2px;
+    transition: background-size 0.35s var(--ease-out-soft);
+    padding-bottom: 2px;
+}
+
+.footer-link:hover {
+    background-size: 100% 2px;
+}
+
+/* ---------- legal prose ---------- */
+
+.legal p,
+.legal li {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: color-mix(in srgb, var(--text) 82%, var(--paper));
+}
+
+.legal p + p {
+    margin-top: 1rem;
+}
+
+.legal ul {
+    display: grid;
+    gap: 0.9rem;
+    padding-left: 1.2rem;
+    list-style: disc;
+}
+
+.legal li::marker {
+    color: var(--ink);
+}
+
+.legal code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.1em 0.35em;
+    border-radius: 0.3em;
+    background: var(--soft);
+}
+
+.legal strong {
+    color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        transition-delay: 0s !important;
+    }
+
+    .fade-up,
+    .roller-text {
+        opacity: 1;
+        transform: none;
+    }
+
+    .roller::after,
+    .wipe {
+        display: none;
+    }
+}

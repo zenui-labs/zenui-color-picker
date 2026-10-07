@@ -1,96 +1,139 @@
-import React from 'react';
-import {Code2, Palette, Shield, Smartphone, Sparkles, Zap} from 'lucide-react';
+import {CSSProperties, ReactNode, useEffect, useState} from "react";
+import {useInView} from "../lib/useInView";
+import {FEATURES} from "../lib/features";
+import {Link} from "../lib/link";
+import {Roller} from "../lib/reveal";
+import {ArrowGlyph} from "../lib/art";
+import {chipColor} from "../lib/chip";
 
-export const FeaturesSection: React.FC = () => {
-    const features = [
-        {
-            icon: <Zap className="w-6 h-6"/>,
-            title: 'Lightning Fast',
-            description: 'Optimized for performance with minimal bundle size and smooth interactions.'
-        },
-        {
-            icon: <Smartphone className="w-6 h-6"/>,
-            title: 'Mobile Friendly',
-            description: 'Responsive design that works perfectly on all devices and touch interfaces.'
-        },
-        {
-            icon: <Palette className="w-6 h-6"/>,
-            title: 'Multiple Formats',
-            description: 'Support for HEX, RGB, HSL, and CMYK color formats with easy conversion.'
-        },
-        {
-            icon: <Code2 className="w-6 h-6"/>,
-            title: 'Framework Agnostic',
-            description: 'Works seamlessly with React, Next.js, Vue.js(coming)'
-        },
-        {
-            icon: <Shield className="w-6 h-6"/>,
-            title: 'TypeScript Ready',
-            description: 'Full TypeScript support with comprehensive type definitions included.'
-        },
-        {
-            icon: <Sparkles className="w-6 h-6"/>,
-            title: 'Highly Customizable',
-            description: 'Extensive theming options and props to match your application design.'
-        }
-    ];
+const MID = (FEATURES.length - 1) / 2;
+const STEP_MS = 4200;
+
+const RoundButton = ({label, onClick, children}: { label: string; onClick: () => void; children: ReactNode }) => (
+    <button type="button" aria-label={label} onClick={onClick}
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-soft text-text transition-[background-color,color,transform] duration-300 ease-[var(--ease-spring)] hover:scale-110 hover:bg-text hover:text-paper active:scale-95">
+        {children}
+    </button>
+);
+
+/**
+ * The deck only reacts to clicks and to the controls on the right. Chips never
+ * react to hover: a hovered chip that lifts away from the cursor would hand
+ * the hover to its neighbour and the deck would shake.
+ */
+const Features = () => {
+    const {ref, seen} = useInView<HTMLDivElement>(0.3);
+    const [active, setActive] = useState(0);
+    const [hovering, setHovering] = useState(false);
+    const [stopped, setStopped] = useState(false);
+    const feature = FEATURES[active];
+    const running = seen && !hovering && !stopped;
+    const go = (delta: number) => setActive(i => (i + delta + FEATURES.length) % FEATURES.length);
+
+    // One timer per card, so picking a card by hand restarts the countdown ring.
+    useEffect(() => {
+        if (!running) return;
+        const timer = setTimeout(() => setActive(i => (i + 1) % FEATURES.length), STEP_MS);
+        return () => clearTimeout(timer);
+    }, [running, active]);
 
     return (
-        <section id='features' className="py-8 lg:py-20">
-            <div className="max-w-[1200px] mx-auto px-6 lg:px-0">
-                <div className="text-center mb-16">
-                    <h2 className="text-[2.5rem] dark:text-darkText font-bold text-gray-900 mb-2">
-                        Powerful Features
-                    </h2>
-                    <p className="text-lg dark:text-darkTextMuted text-gray-600 max-w-2xl mx-auto">
-                        Everything you need to integrate beautiful color picking functionality into your applications.
-                    </p>
-                </div>
+        <section id="features" className="relative overflow-hidden bg-card py-24 lg:py-32">
+            <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+                <Roller className="display max-w-3xl text-[clamp(2.8rem,6vw,5rem)]">
+                    A small component with a <em>whole fan deck</em> of options.
+                </Roller>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {features.map((feature, index) => (
-                        <div
-                            key={index}
-                            className="group p-6 rounded-xl dark:border-darkBorder border border-gray-200 hover:border-accent/40 hover:shadow-lg dark:hover:shadow-darkShadow transition-all duration-300"
-                        >
-                            <div
-                                className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center text-accent mb-4 group-hover:bg-accent group-hover:text-white duration-300 transition-colors">
-                                {feature.icon}
+                <div ref={ref} className="mt-16 grid items-center gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+                    <div
+                        className={`fan relative mx-auto h-[360px] w-full max-w-[460px] [--step:7deg] sm:h-[430px] sm:[--step:10deg] ${seen ? 'in-view' : ''}`}
+                        data-has-active="">
+                        {FEATURES.map((f, i) => (
+                            <button key={f.slug} type="button" tabIndex={-1} aria-hidden="true"
+                                    onClick={() => setActive(i)}
+                                    data-active={i === active || undefined}
+                                    className="fan-chip absolute bottom-0 left-1/2 -ml-[44px] h-[330px] w-[88px] cursor-pointer sm:h-[400px]"
+                                    style={{'--i': i, '--mid': MID, zIndex: i} as CSSProperties}>
+                                <span
+                                    className="fan-face flex h-full flex-col overflow-hidden rounded-[14px] border border-black/10 bg-[#fbfaf6] text-left shadow-[0_10px_30px_-12px_rgba(0,0,0,.4)]">
+                                    <span className="h-[62%] transition-colors duration-500"
+                                          style={{background: chipColor(i)}}/>
+                                    <span className="flex flex-1 flex-col justify-end p-2.5 text-[#1a1814]">
+                                        <span className="display self-start text-[1.1rem] leading-none [writing-mode:vertical-rl] rotate-180">
+                                            {f.title.split(' ')[0]}
+                                        </span>
+                                    </span>
+                                </span>
+                            </button>
+                        ))}
+                        <span
+                            className="absolute bottom-[14px] left-1/2 z-30 size-5 -translate-x-1/2 rounded-full border-2 border-[#1a1814]/50 bg-gradient-to-br from-[#e9e6de] to-[#9a958a] shadow-md"/>
+                    </div>
+
+                    <div onPointerEnter={() => setHovering(true)} onPointerLeave={() => setHovering(false)}>
+                        <article
+                            className="feature-card relative overflow-hidden rounded-[32px] bg-paper p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,.45)]"
+                            style={{'--chip': chipColor(active)} as CSSProperties}>
+                            <div className="feature-band relative h-44 overflow-hidden rounded-[24px] sm:h-52">
+                                <span aria-hidden="true" className="absolute left-5 top-5 size-4 rounded-full bg-paper/90 shadow-inner"/>
+                                <span key={feature.slug} aria-hidden="true" className="band-swirl absolute -bottom-24 -right-16 size-72 rounded-full"/>
+                                <span key={`${feature.slug}-b`} aria-hidden="true" className="band-swirl band-swirl--late absolute -left-20 -top-28 size-64 rounded-full"/>
+                                <div className="absolute bottom-4 right-4">
+                                    <svg viewBox="0 0 44 44" className="size-11 -rotate-90" aria-hidden="true">
+                                        <circle cx="22" cy="22" r="18" fill="none" strokeWidth="4" className="stroke-paper/35"/>
+                                        <circle key={`${feature.slug}-${running}`} cx="22" cy="22" r="18" fill="none" strokeWidth="4"
+                                                strokeLinecap="round" pathLength={1}
+                                                className={`stroke-paper ${running ? 'countdown' : ''}`}
+                                                style={{'--ms': `${STEP_MS}ms`, strokeDasharray: 1, strokeDashoffset: running ? 1 : 0.999} as CSSProperties}/>
+                                    </svg>
+                                </div>
                             </div>
-                            <h3 className="text-xl dark:text-darkText font-semibold text-gray-900 mb-2">
-                                {feature.title}
-                            </h3>
-                            <p className="text-gray-600 dark:text-darkTextMuted/90 leading-relaxed">
-                                {feature.description}
-                            </p>
+
+                            <div className="px-4 pb-4 pt-6 sm:px-6">
+                                <div key={feature.slug} className="swap-in min-h-[150px]">
+                                    <h3 className="display text-[clamp(2.2rem,4vw,3.2rem)]">{feature.title}</h3>
+                                    <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted">{feature.short}</p>
+                                </div>
+
+                                <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                                    <Link to={`/features/${feature.slug}`}
+                                          className="group inline-flex items-center gap-2 rounded-full bg-text px-5 py-2.5 text-sm font-medium text-paper transition-transform duration-300 ease-[var(--ease-spring)] hover:scale-105">
+                                        How it works
+                                        <ArrowGlyph className="size-4 transition-transform duration-300 group-hover:translate-x-1"/>
+                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        <RoundButton label="Previous feature" onClick={() => go(-1)}>
+                                            <ArrowGlyph className="size-4 rotate-180"/>
+                                        </RoundButton>
+                                        <RoundButton label={stopped ? 'Play' : 'Pause'} onClick={() => setStopped(s => !s)}>
+                                            {stopped ? (
+                                                <svg viewBox="0 0 20 20" className="size-4" aria-hidden="true"><path d="M6 4.5v11l9-5.5z" fill="currentColor"/></svg>
+                                            ) : (
+                                                <svg viewBox="0 0 20 20" className="size-4" aria-hidden="true"><path d="M6 4h3v12H6zM11 4h3v12h-3z" fill="currentColor"/></svg>
+                                            )}
+                                        </RoundButton>
+                                        <RoundButton label="Next feature" onClick={() => go(1)}>
+                                            <ArrowGlyph className="size-4"/>
+                                        </RoundButton>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Pick a feature">
+                            {FEATURES.map((f, i) => (
+                                <button key={f.slug} type="button" onClick={() => setActive(i)} aria-pressed={i === active}
+                                        className={`flex cursor-pointer items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3.5 text-[13px] transition-colors duration-300 ${i === active ? 'bg-text text-paper' : 'bg-paper text-muted hover:text-text'}`}>
+                                    <span className="size-5 rounded-full transition-transform duration-300" style={{background: chipColor(i)}}/>
+                                    {f.title}
+                                </button>
+                            ))}
                         </div>
-                    ))}
+                    </div>
                 </div>
             </div>
-
-            <div className="bg-accent/10 text-center mt-16 p-12">
-                <h3 className="text-[2.3rem] font-bold dark:text-darkText text-gray-900 mb-2">
-                    Ready to get started?
-                </h3>
-                <p className="text-gray-600 dark:text-darkTextMuted mb-12 text-base max-w-2xl mx-auto">
-                    Join thousands of developers who trust our color picker for their projects.
-                    Get up and running in minutes with our comprehensive documentation.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a
-                        href='https://github.com/zenui-labs/zenui-color-picker/blob/main/README.md'
-                        target='_blank'
-                        className="px-8 cursor-pointer py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors">
-                        View Documentation
-                    </a>
-                    <a
-                        href='#playground'
-                        className="px-8 cursor-pointer dark:border-darkBorder dark:text-darkText dark:hover:bg-gray-800 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
-                        Browse Examples
-                    </a>
-                </div>
-            </div>
-
         </section>
     );
 };
+
+export default Features;

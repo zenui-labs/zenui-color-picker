@@ -1,133 +1,92 @@
 import React, {useEffect, useState} from 'react';
-import {ColorFormat} from '../types';
-import {useColorPicker} from "../hooks/useColorPicker";
-import {Check, Copy} from "lucide-react";
-import {clsx} from "clsx";
+import type {ColorFormat} from '../types';
+import {copyText} from "../hooks/useColorPicker";
+import {parseColor} from "../utils/colorUtils";
+import {CheckIcon, CopyIcon} from "./icons";
+import {cx} from "../utils/cx";
+import {useUniqueId} from "../hooks/useUniqueId";
 
 interface ColorInputProps {
     value: string;
     format: ColorFormat;
     onChange: (value: string) => void;
+    /** Called when the field loses focus or Enter is pressed. */
+    onCommit?: () => void;
     theme?: 'light' | 'dark';
     showCopyButton?: boolean;
     disabled?: boolean;
 }
 
+const PLACEHOLDERS: Record<ColorFormat, string> = {
+    hex: '#3B82F6',
+    rgb: 'rgb(59, 130, 246)',
+    hsl: 'hsl(217, 91%, 60%)',
+    hsv: 'hsv(217, 76%, 96%)',
+    cmyk: 'cmyk(76%, 47%, 0%, 4%)'
+};
+
+/** Text field that accepts any supported color format, not just the active one. */
 export const ColorInput: React.FC<ColorInputProps> = ({
                                                           value,
                                                           format,
                                                           showCopyButton,
                                                           onChange,
+                                                          onCommit,
                                                           disabled,
-                                                          theme = 'light'
+                                                          theme,
                                                       }) => {
-    const [inputValue, setInputValue] = useState(value);
-    const [isValid, setIsValid] = useState(true);
-    const [copySuccess, setCopySuccess] = useState(false);
-
-    const {copyToClipboard} = useColorPicker()
-
-    const handleCopy = async () => {
-        const success = await copyToClipboard(value);
-        if (success) {
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-        }
-    };
+    const id = useUniqueId('zcp-input');
+    const [draft, setDraft] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const isValid = draft === null || parseColor(draft) !== null;
 
     useEffect(() => {
-        setInputValue(value);
-    }, [value]);
-
-    const validateInput = (input: string): boolean => {
-        switch (format) {
-            case 'hex':
-                return /^#[0-9A-Fa-f]{3,8}$/.test(input);
-            case 'rgb':
-                return /^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*(0|1|0\.\d+))?\s*\)$/.test(input);
-            case 'hsl':
-                return /^hsla?\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*(,\s*(0|1|0\.\d+))?\s*\)$/.test(input);
-            case 'hsv':
-                return /^hsv\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/.test(input);
-            case 'cmyk':
-                return /^cmyk\(\s*\d+%\s*,\s*\d+%\s*,\s*\d+%\s*,\s*\d+%\s*\)$/.test(input);
-            default:
-                return true;
-        }
-    };
+        if (!copied) return;
+        const timer = setTimeout(() => setCopied(false), 1600);
+        return () => clearTimeout(timer);
+    }, [copied]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        setInputValue(newValue);
-
-        const valid = validateInput(newValue);
-        setIsValid(valid);
-
-        if (valid) {
-            onChange(newValue);
-        }
+        const next = e.target.value;
+        setDraft(next);
+        if (parseColor(next)) onChange(next);
     };
 
-    const handleBlur = () => {
-        if (disabled) return;
-
-        if (!isValid) {
-            setInputValue(value);
-            setIsValid(true);
-        }
+    const commit = () => {
+        if (draft !== null && isValid) onCommit?.();
+        setDraft(null);
     };
-
-    const placeholder = {
-        hex: '#3B82F6',
-        rgb: 'rgb(59, 130, 246)',
-        hsl: 'hsl(217, 91%, 60%)',
-        hsv: 'hsv(217, 76%, 96%)',
-        cmyk: 'cmyk(76%, 47%, 0%, 4%)'
-    }[format];
 
     return (
-        <div className='relative'>
+        <div className="zcp-field" data-zcp-theme={theme} data-invalid={!isValid || undefined}>
             <input
-                id={`zenuicolorpicker-input-${format}`}
-                aria-label={`Enter color in ${format.toUpperCase()} format`}
+                id={id}
+                className="zcp-input"
+                aria-label={`Color value (${format.toUpperCase()})`}
                 aria-invalid={!isValid}
-                aria-describedby={!isValid ? `color-input-error-${format}` : undefined}
                 type="text"
-                value={inputValue}
+                spellCheck={false}
+                autoComplete="off"
+                value={draft ?? value}
                 disabled={disabled}
                 onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder={placeholder}
-                className={clsx(
-                    'w-full px-3 py-2 rounded-lg disabled:cursor-not-allowed border text-sm font-mono outline-none focus:ring-2 focus:ring-[var(--brand-color)] transition-colors',
-                    isValid ? theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white border-gray-200 text-gray-900'
-                        : 'border-red-300 bg-red-50 text-red-900 dark:!ring-red-500/20 dark:bg-red-500/20 dark:text-red-100'
-                )}
+                onBlur={commit}
+                onKeyDown={(e) => e.key === 'Enter' && commit()}
+                placeholder={PLACEHOLDERS[format]}
             />
             {showCopyButton && (
                 <button
-                    aria-label={copySuccess ? "Color copied to clipboard" : "Copy color value"}
-                    aria-live="polite"
-                    type='button'
+                    type="button"
+                    className={cx('zcp-icon-btn', copied && 'is-done')}
+                    aria-label={copied ? 'Copied' : 'Copy color value'}
+                    title={copied ? 'Copied' : 'Copy'}
                     disabled={disabled}
-                    onClick={handleCopy}
-                    className={clsx(
-                        'p-2 rounded-lg disabled:cursor-not-allowed transition-colors absolute top-1/2 -translate-y-1/2 right-0.5 duration-200 cursor-pointer',
-                        theme === 'dark' && 'hover:bg-gray-700 text-white',
-                        copySuccess ? 'text-[var(--brand-color)] bg-[var(--brand-color)]/10'
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-600'
-                    )}
-                    title={copySuccess ? 'Copied!' : 'Copy color'}
+                    onClick={async () => setCopied(await copyText(value))}
                 >
-                    {
-                        copySuccess ? (
-                            <Check size={16}/>
-                        ) : (
-                            <Copy size={16}/>
-                        )
-                    }
+                    {copied ? <CheckIcon/> : <CopyIcon/>}
                 </button>
             )}
+            <span className="zcp-sr" aria-live="polite">{copied ? 'Copied to clipboard' : ''}</span>
         </div>
     );
 };

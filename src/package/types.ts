@@ -1,7 +1,7 @@
-import React from "react";
+import type React from "react";
 
 export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv' | 'cmyk';
-export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box'
+export type ColorPickerVariant = 'wheel' | 'hue-slider' | 'hue-box' | 'spectrum' | 'sliders' | 'swatches';
 export type Themes = 'light' | 'dark';
 
 export interface ColorValue {
@@ -12,6 +12,10 @@ export interface ColorValue {
     cmyk: { c: number; m: number; y: number; k: number };
 }
 
+/**
+ * @deprecated Never read by the component. Theme the picker with the
+ * `--zcp-*` CSS custom properties instead (see README, "Theming").
+ */
 export interface ColorPickerTheme {
     primary: string;
     secondary: string;
@@ -25,15 +29,17 @@ export interface ColorPickerTheme {
 }
 
 export interface ColorPickerProps {
+    /** Any string `parseColor` understands: hex, rgb(a), hsl(a), hsv or cmyk. */
     value?: string;
     format?: ColorFormat;
     variant?: ColorPickerVariant;
+    /** Pins the theme. Left out, the picker follows a `.dark` class on any ancestor. */
     theme?: Themes;
     disabled?: boolean;
     inline?: boolean;
     showColorInput?: boolean;
     showTitle?: boolean;
-    title?: string
+    title?: string;
     popupClasses?: string;
     showAlpha?: boolean;
     showHistory?: boolean;
@@ -48,11 +54,18 @@ export interface ColorPickerProps {
     onOpen?: () => void;
     onClose?: () => void;
     enableHueSlider?: boolean;
+    /** Accent used for focus rings, the active format and selected swatches. */
     brandColor?: string;
     enableFavorite?: boolean;
     showPresets?: boolean;
     enableShuffle?: boolean;
-    triggerRef?: React.RefObject<HTMLElement>;
+    /** Adds a "pick from screen" button where the browser supports the EyeDropper API (Chromium). */
+    enableEyeDropper?: boolean;
+    /** Shows a row of harmonious colors (complementary, analogous, triadic, split, tetradic). */
+    showHarmony?: boolean;
+    /** Shows the WCAG contrast of the color against white and black text. */
+    showContrast?: boolean;
+    triggerRef?: React.RefObject<HTMLElement | null>;
     showDefaultButton?: boolean;
 }
 
@@ -62,4 +75,9 @@ export interface UseColorPickerOptions {
     showAlpha?: boolean;
     maxHistory?: number;
     setCurrentHue?: (hue: number) => void;
+}
+
+export interface UpdateColorOptions {
+    /** Defaults to true. Pass false while dragging so history only keeps settled colors. */
+    addToHistory?: boolean;
 }

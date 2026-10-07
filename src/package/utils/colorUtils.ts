@@ -1,36 +1,32 @@
-import {ColorValue} from '../types';
+import type {ColorFormat, ColorValue} from '../types';
 
 export const defaultPresetColors = [
-    '#FF6B6B', '#4ECDC4', '#2300ff', '#96CEB4', '#FFEAA7',
-    '#DDA0DD', '#98D8C8', '#F7DC6F', '#006b85', '#85C1E9', '#C500ABFF'
+    '#FF6B6B', '#4ECDC4', '#2300FF', '#96CEB4', '#FFEAA7',
+    '#DDA0DD', '#98D8C8', '#F7DC6F', '#006B85', '#85C1E9', '#C500AB'
 ];
 
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+const roundAlpha = (a: number) => Math.round(clamp(a, 0, 1) * 100) / 100;
+
+/** Accepts #rgb, #rgba, #rrggbb and #rrggbbaa (the leading # is optional). */
 export function hexToRgb(hex: string): { r: number; g: number; b: number; a?: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(hex);
-    if (!result) return {r: 0, g: 0, b: 0};
+    let h = hex.trim().replace(/^#/, '');
+    if (!/^([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(h)) return {r: 0, g: 0, b: 0};
+    if (h.length <= 4) h = h.split('').map(c => c + c).join('');
 
     const rgb = {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16),
     };
 
-    if (result[4]) {
-        return {...rgb, a: parseInt(result[4], 16) / 255};
-    }
-
-    return rgb;
+    return h.length === 8 ? {...rgb, a: roundAlpha(parseInt(h.slice(6, 8), 16) / 255)} : rgb;
 }
 
 export function rgbToHex(r: number, g: number, b: number, a?: number): string {
-    const toHex = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
+    const toHex = (n: number) => Math.round(clamp(n, 0, 255)).toString(16).padStart(2, '0');
     const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-
-    if (a !== undefined) {
-        return `${hex}${toHex(a * 255)}`;
-    }
-
-    return hex;
+    return a !== undefined ? `${hex}${toHex(a * 255)}` : hex;
 }
 
 export function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
@@ -40,37 +36,27 @@ export function rgbToHsl(r: number, g: number, b: number): { h: number; s: numbe
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    let h: number, s: number, l = (max + min) / 2;
+    const l = (max + min) / 2;
+    let h = 0;
+    let s = 0;
 
-    if (max === min) {
-        h = s = 0;
-    } else {
+    if (max !== min) {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-        switch (max) {
-            case r:
-                h = (g - b) / d + (g < b ? 6 : 0);
-                break;
-            case g:
-                h = (b - r) / d + 2;
-                break;
-            case b:
-                h = (r - g) / d + 4;
-                break;
-            default:
-                h = 0;
-        }
+        if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
         h /= 6;
     }
 
-    return {h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100)};
+    return {h: Math.round(h * 360) % 360, s: Math.round(s * 100), l: Math.round(l * 100)};
 }
 
 export function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-    h /= 360;
-    s /= 100;
-    l /= 100;
+    h = (((h % 360) + 360) % 360) / 360;
+    s = clamp(s, 0, 100) / 100;
+    l = clamp(l, 0, 100) / 100;
 
     const hue2rgb = (p: number, q: number, t: number) => {
         if (t < 0) t += 1;
@@ -81,26 +67,23 @@ export function hslToRgb(h: number, s: number, l: number): { r: number; g: numbe
         return p;
     };
 
-    let r: number, g: number, b: number;
-
     if (s === 0) {
-        r = g = b = l;
-    } else {
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
+        const grey = Math.round(l * 255);
+        return {r: grey, g: grey, b: grey};
     }
 
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+
     return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
+        r: Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
+        g: Math.round(hue2rgb(p, q, h) * 255),
+        b: Math.round(hue2rgb(p, q, h - 1 / 3) * 255)
     };
 }
 
-export function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+/** Unrounded RGB to HSV. Used internally so dragging never drifts. */
+export function rgbToHsvExact(r: number, g: number, b: number): { h: number; s: number; v: number } {
     r /= 255;
     g /= 255;
     b /= 255;
@@ -110,55 +93,36 @@ export function rgbToHsv(r: number, g: number, b: number): { h: number; s: numbe
     const diff = max - min;
 
     let h = 0;
-    const s = max === 0 ? 0 : diff / max;
-    const v = max;
-
     if (diff !== 0) {
-        switch (max) {
-            case r:
-                h = (g - b) / diff + (g < b ? 6 : 0);
-                break;
-            case g:
-                h = (b - r) / diff + 2;
-                break;
-            case b:
-                h = (r - g) / diff + 4;
-                break;
-        }
+        if (max === r) h = (g - b) / diff + (g < b ? 6 : 0);
+        else if (max === g) h = (b - r) / diff + 2;
+        else h = (r - g) / diff + 4;
         h /= 6;
     }
 
-    return {
-        h: Math.round(h * 360),
-        s: Math.round(s * 100),
-        v: Math.round(v * 100)
-    };
+    return {h: h * 360, s: max === 0 ? 0 : (diff / max) * 100, v: max * 100};
+}
+
+export function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
+    const {h, s, v} = rgbToHsvExact(r, g, b);
+    return {h: Math.round(h) % 360, s: Math.round(s), v: Math.round(v)};
 }
 
 export function hsvToRgb(h: number, s: number, v: number): { r: number; g: number; b: number } {
-    h /= 360;
-    s /= 100;
-    v /= 100;
+    h = (((h % 360) + 360) % 360) / 60;
+    s = clamp(s, 0, 100) / 100;
+    v = clamp(v, 0, 100) / 100;
 
     const c = v * s;
-    const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+    const x = c * (1 - Math.abs((h % 2) - 1));
     const m = v - c;
 
-    let r: number, g: number, b: number;
-
-    if (h < 1 / 6) {
-        [r, g, b] = [c, x, 0];
-    } else if (h < 2 / 6) {
-        [r, g, b] = [x, c, 0];
-    } else if (h < 3 / 6) {
-        [r, g, b] = [0, c, x];
-    } else if (h < 4 / 6) {
-        [r, g, b] = [0, x, c];
-    } else if (h < 5 / 6) {
-        [r, g, b] = [x, 0, c];
-    } else {
-        [r, g, b] = [c, 0, x];
-    }
+    const [r, g, b] =
+        h < 1 ? [c, x, 0] :
+            h < 2 ? [x, c, 0] :
+                h < 3 ? [0, c, x] :
+                    h < 4 ? [0, x, c] :
+                        h < 5 ? [x, 0, c] : [c, 0, x];
 
     return {
         r: Math.round((r + m) * 255),
@@ -172,78 +136,152 @@ export function rgbToCmyk(r: number, g: number, b: number): { c: number; m: numb
     g /= 255;
     b /= 255;
 
-    const k = 1 - Math.max(r, Math.max(g, b));
-    const c = (1 - r - k) / (1 - k) || 0;
-    const m = (1 - g - k) / (1 - k) || 0;
-    const y = (1 - b - k) / (1 - k) || 0;
+    const k = 1 - Math.max(r, g, b);
+    if (k === 1) return {c: 0, m: 0, y: 0, k: 100};
 
     return {
-        c: Math.round(c * 100),
-        m: Math.round(m * 100),
-        y: Math.round(y * 100),
+        c: Math.round(((1 - r - k) / (1 - k)) * 100),
+        m: Math.round(((1 - g - k) / (1 - k)) * 100),
+        y: Math.round(((1 - b - k) / (1 - k)) * 100),
         k: Math.round(k * 100)
     };
 }
 
+export function cmykToRgb(c: number, m: number, y: number, k: number): { r: number; g: number; b: number } {
+    const [cc, mm, yy, kk] = [c, m, y, k].map(n => clamp(n, 0, 100) / 100);
+    return {
+        r: Math.round(255 * (1 - cc) * (1 - kk)),
+        g: Math.round(255 * (1 - mm) * (1 - kk)),
+        b: Math.round(255 * (1 - yy) * (1 - kk)),
+    };
+}
+
+/** Splits "a, b, c / d" or "a b c d" into numbers. Percent alpha becomes 0..1. */
+function readChannels(body: string): number[] {
+    const parts = body.replace(/\//g, ' ').split(/[\s,]+/).filter(Boolean);
+    return parts.map((part, i) => {
+        const n = parseFloat(part);
+        if (i === 3 && part.endsWith('%')) return n / 100;
+        return n;
+    });
+}
+
+/**
+ * Parses hex, rgb(a), hsl(a), hsv and cmyk strings. Both comma and
+ * space separated syntax work. Returns null when the string is not a color.
+ */
 export function parseColor(colorString: string): ColorValue | null {
-    try {
-        const color = colorString.trim();
+    const color = colorString.trim().toLowerCase();
 
-        if (color.startsWith('#')) {
-            const rgb = hexToRgb(color);
-            return colorToValue(rgb.r, rgb.g, rgb.b, rgb.a);
+    if (/^#?([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(color) && (color.startsWith('#') || color.length >= 6)) {
+        const {r, g, b, a} = hexToRgb(color);
+        return colorToValue(r, g, b, a);
+    }
+
+    const fn = /^(rgba?|hsla?|hsv|cmyk)\(([^)]+)\)$/.exec(color);
+    if (!fn) return null;
+
+    const values = readChannels(fn[2]);
+    if (values.some(Number.isNaN)) return null;
+    const alpha = values[3] !== undefined ? roundAlpha(values[3]) : undefined;
+
+    switch (fn[1]) {
+        case 'rgb':
+        case 'rgba': {
+            if (values.length < 3) return null;
+            const [r, g, b] = values.map(n => clamp(Math.round(n), 0, 255));
+            return colorToValue(r, g, b, alpha);
         }
-
-        const rgbMatch = color.match(/rgba?\(([^)]+)\)/);
-        if (rgbMatch) {
-            const values = rgbMatch[1].split(',').map(v => parseFloat(v.trim()));
-            if (values.length >= 3) {
-                return colorToValue(values[0], values[1], values[2], values[3]);
-            }
+        case 'hsl':
+        case 'hsla': {
+            if (values.length < 3) return null;
+            const {r, g, b} = hslToRgb(values[0], values[1], values[2]);
+            return colorToValue(r, g, b, alpha);
         }
-
-        const hslMatch = color.match(/hsla?\(([^)]+)\)/);
-        if (hslMatch) {
-            const values = hslMatch[1].split(',').map(v => parseFloat(v.trim()));
-            if (values.length >= 3) {
-                const rgb = hslToRgb(values[0], values[1], values[2]);
-                return colorToValue(rgb.r, rgb.g, rgb.b, values[3]);
-            }
+        case 'hsv': {
+            if (values.length < 3) return null;
+            const {r, g, b} = hsvToRgb(values[0], values[1], values[2]);
+            return colorToValue(r, g, b, alpha);
         }
-
-        return null;
-    } catch {
-        return null;
+        case 'cmyk': {
+            if (values.length < 4) return null;
+            const {r, g, b} = cmykToRgb(values[0], values[1], values[2], values[3]);
+            return colorToValue(r, g, b);
+        }
+        default:
+            return null;
     }
 }
 
+/** Builds every representation of one color. Alpha is kept only when given. */
 export function colorToValue(r: number, g: number, b: number, a?: number): ColorValue {
-    const hex = rgbToHex(r, g, b, a);
-    const rgb = {r, g, b, ...(a !== undefined && {a})};
-    const hsl = {...rgbToHsl(r, g, b), ...(a !== undefined && {a})};
-    const hsv = {...rgbToHsv(r, g, b), ...(a !== undefined && {a})};
-    const cmyk = rgbToCmyk(r, g, b);
+    const alpha = a !== undefined ? roundAlpha(a) : undefined;
+    const withAlpha = alpha !== undefined ? {a: alpha} : {};
 
-    return {hex, rgb, hsl, hsv, cmyk};
+    return {
+        hex: rgbToHex(r, g, b, alpha),
+        rgb: {r, g, b, ...withAlpha},
+        hsl: {...rgbToHsl(r, g, b), ...withAlpha},
+        hsv: {...rgbToHsv(r, g, b), ...withAlpha},
+        cmyk: rgbToCmyk(r, g, b),
+    };
 }
 
-export function formatColorValue(colorValue: ColorValue, format: string): string {
+export function formatColorValue(colorValue: ColorValue, format: ColorFormat | string): string {
     switch (format) {
-        case 'hex':
-            return colorValue.hex;
-        case 'rgb':
+        case 'rgb': {
             const {r, g, b, a} = colorValue.rgb;
             return a !== undefined ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
-        case 'hsl':
-            const {h, s, l, a: hslA} = colorValue.hsl;
-            return hslA !== undefined ? `hsla(${h}, ${s}%, ${l}%, ${hslA})` : `hsl(${h}, ${s}%, ${l}%)`;
-        case 'hsv':
-            const {h: hsvH, s: hsvS, v} = colorValue.hsv;
-            return `hsv(${hsvH}, ${hsvS}%, ${v}%)`;
-        case 'cmyk':
+        }
+        case 'hsl': {
+            const {h, s, l, a} = colorValue.hsl;
+            return a !== undefined ? `hsla(${h}, ${s}%, ${l}%, ${a})` : `hsl(${h}, ${s}%, ${l}%)`;
+        }
+        case 'hsv': {
+            const {h, s, v} = colorValue.hsv;
+            return `hsv(${h}, ${s}%, ${v}%)`;
+        }
+        case 'cmyk': {
             const {c, m, y, k} = colorValue.cmyk;
             return `cmyk(${c}%, ${m}%, ${y}%, ${k}%)`;
+        }
         default:
             return colorValue.hex;
     }
+}
+
+/** Relative luminance (WCAG). Handy for picking readable text on a swatch. */
+export function getLuminance(color: ColorValue): number {
+    const lin = (n: number) => {
+        const c = n / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const {r, g, b} = color.rgb;
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/** WCAG contrast ratio between two colors, from 1 to 21. Alpha is ignored. */
+export function getContrastRatio(a: ColorValue, b: ColorValue): number {
+    const [hi, lo] = [getLuminance(a), getLuminance(b)].sort((x, y) => y - x);
+    return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100;
+}
+
+export type HarmonyMode = 'complementary' | 'analogous' | 'triadic' | 'split' | 'tetradic';
+
+const HARMONY_OFFSETS: Record<HarmonyMode, number[]> = {
+    complementary: [0, 180],
+    analogous: [-30, 0, 30],
+    triadic: [0, 120, 240],
+    split: [0, 150, 210],
+    tetradic: [0, 90, 180, 270],
+};
+
+/** Colors that sit at fixed hue distances from the given one. The first item is the color itself (rotated by 0). */
+export function getHarmony(color: ColorValue, mode: HarmonyMode): ColorValue[] {
+    const {r, g, b, a} = color.rgb;
+    const {h, s, v} = rgbToHsvExact(r, g, b);
+    return HARMONY_OFFSETS[mode].map((offset) => {
+        const rgb = hsvToRgb(h + offset, s, v);
+        return colorToValue(rgb.r, rgb.g, rgb.b, a);
+    });
 }

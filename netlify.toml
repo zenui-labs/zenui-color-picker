@@ -1,0 +1,14 @@
+# Demo site at color-picker.zenui.net
+[build]
+  command = "npm run build:web"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 needs Node 20.19+ or 22.12+.
+  NODE_VERSION = "22"
+
+# Client-side routes (/features/*, /privacy, /terms) all load the app shell.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

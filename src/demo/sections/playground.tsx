@@ -1,283 +1,228 @@
-import {useMemo, useRef, useState} from "react";
-import {Code, Eye, Settings} from "lucide-react";
-import {ColorFormat, ColorPicker} from "../../package";
-import {InputField} from "../components/input-field";
-import {CheckboxField} from "../components/checkbox-field";
-import {SelectField} from "../components/select-field";
-import {ColorPickerVariant, Themes} from "../../package/types";
-import {Prism as SyntaxHighlighter} from "react-syntax-highlighter";
-import {atomDark} from "react-syntax-highlighter/dist/esm/styles/prism";
+import {ReactNode, useMemo, useRef, useState} from "react";
+import {ColorFormat, ColorPicker, ColorPickerVariant, Themes} from "../../package";
+import {CodeBlock} from "../components/CodeBlock";
 
-const formatOptions = [
-    {value: "hex", label: "HEX (#ffffff)"},
-    {value: "rgb", label: "RGB (rgb(255, 255, 255))"},
-    {value: "hsl", label: "HSL (hsl(0, 0%, 100%))"},
-    {value: "hsv", label: "HSV (hsv(0, 0%, 100%))"},
-    {value: "cmyk", label: "CMYK (cmyk(0, 0, 0, 0))"},
-];
+type ToggleKey =
+    'showTitle' | 'inline' | 'disabled' | 'showAlpha' | 'showHistory' | 'showFormats' | 'showCopyButton'
+    | 'showPresets' | 'showColorInput' | 'enableHueSlider' | 'enableFavorite' | 'enableShuffle' | 'enableEyeDropper'
+    | 'showHarmony' | 'showContrast';
 
-const variantOptions = [
-    {value: "wheel", label: "Color Wheel"},
-    {value: "hue-slider", label: "Hue Slider"},
-    {value: "hue-box", label: "Hue Box"},
-];
+/** Defaults as the component ships them. Only props that differ end up in the code. */
+const DEFAULT_TOGGLES: Record<ToggleKey, boolean> = {
+    showTitle: true,
+    inline: false,
+    disabled: false,
+    showAlpha: true,
+    showHistory: true,
+    showFormats: true,
+    showCopyButton: true,
+    showPresets: true,
+    showColorInput: true,
+    enableHueSlider: false,
+    enableFavorite: false,
+    enableShuffle: false,
+    enableEyeDropper: false,
+    showHarmony: false,
+    showContrast: false,
+};
 
-const themeOptions = [
-    {value: "light", label: "Light Theme"},
-    {value: "dark", label: "Dark Theme"},
-];
+const START_TOGGLES: Record<ToggleKey, boolean> = {
+    ...DEFAULT_TOGGLES,
+    inline: true,
+    enableShuffle: true,
+    enableFavorite: true,
+    showContrast: true,
+};
 
-export const Playground = () => {
-    const [selectedColor, setSelectedColor] = useState("#3B82F6");
+function Segmented<T extends string>({label, value, options, onChange}: {
+    label: string;
+    value: T;
+    options: readonly T[];
+    onChange: (v: T) => void
+}) {
+    const index = options.indexOf(value);
+    const cols = options.length > 5 ? 3 : options.length;
+    const rows = Math.ceil(options.length / cols);
+    return (
+        <fieldset>
+            <legend className="mb-2 text-sm text-muted">{label}</legend>
+            <div className="relative grid rounded-xl bg-soft p-1"
+                 style={{gridTemplateColumns: `repeat(${cols}, 1fr)`}}>
+                <span aria-hidden="true"
+                      className="absolute left-1 top-1 rounded-lg bg-card shadow-[0_1px_3px_rgba(0,0,0,.12),0_0_0_1px_var(--line)] transition-transform duration-500 ease-[var(--ease-spring)]"
+                      style={{
+                          width: `calc((100% - .5rem) / ${cols})`,
+                          height: `calc((100% - .5rem) / ${rows})`,
+                          transform: `translate(${(index % cols) * 100}%, ${Math.floor(index / cols) * 100}%)`,
+                      }}/>
+                {options.map((option) => (
+                    <label key={option}
+                           className={`relative z-10 cursor-pointer rounded-lg py-2 text-center font-mono text-xs transition-colors has-focus-visible:outline-2 has-focus-visible:outline-ink ${option === value ? 'text-text' : 'text-muted hover:text-text'}`}>
+                        <input type="radio" className="sr-only" name={label} checked={option === value}
+                               onChange={() => onChange(option)}/>
+                        {option}
+                    </label>
+                ))}
+            </div>
+        </fieldset>
+    );
+}
+
+const Switch = ({label, checked, onChange}: { label: string; checked: boolean; onChange: () => void }) => (
+    <label className="group flex cursor-pointer items-center justify-between gap-3 py-2.5">
+        <span className="font-mono text-[13px]">{label}</span>
+        <input type="checkbox" role="switch" className="peer sr-only" checked={checked} onChange={onChange}/>
+        <span
+            className="relative h-6 w-10 flex-none rounded-full bg-soft shadow-[inset_0_0_0_1px_var(--line)] transition-colors duration-300 peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink">
+            <span
+                className={`absolute top-1 size-4 rounded-full bg-white shadow transition-all duration-300 ease-[var(--ease-spring)] ${checked ? 'left-5' : 'left-1'}`}/>
+        </span>
+    </label>
+);
+
+const Panel = ({title, children}: { title: string; children: ReactNode }) => (
+    <section className="rounded-[24px] border border-line bg-card p-5 sm:p-6">
+        <h3 className="display mb-5 text-3xl">{title}</h3>
+        {children}
+    </section>
+);
+
+const Playground = () => {
+    const [color, setColor] = useState("#2F6BFF");
     const [format, setFormat] = useState<ColorFormat>("hex");
-    const [variant, setVariant] = useState<ColorPickerVariant>("hue-box");
-    const [theme, setTheme] = useState<Themes>("light");
+    const [variant, setVariant] = useState<ColorPickerVariant>("wheel");
+    const [theme, setTheme] = useState<Themes | "auto">("auto");
     const [title, setTitle] = useState("Color Picker");
-    const [brandColor, setBrandColor] = useState("#3B82F6");
-    const [copied, setCopied] = useState(false);
-    const brandColorButtonRef = useRef<HTMLDivElement>(null);
+    const [brandColor, setBrandColor] = useState<string | null>(null);
     const [maxHistory, setMaxHistory] = useState(10);
+    const [toggles, setToggles] = useState(START_TOGGLES);
+    const brandRef = useRef<HTMLButtonElement>(null);
 
-    const [toggles, setToggles] = useState({
-        showTitle: false,
-        disabled: false,
-        inline: true,
-        showAlpha: false,
-        showHistory: true,
-        showFormats: true,
-        showCopyButton: true,
-        showPresets: true,
-        enableHueSlider: true,
-        enableFavorite: false,
-        enableShuffle: false,
-    });
+    const code = useMemo(() => {
+        const props = ['value={color}', 'onChange={(next) => setColor(next.hex)}'];
+        const str = (name: string, v: string) => props.push(`${name}="${v}"`);
+        const expr = (name: string, v: number | boolean) => props.push(`${name}={${v}}`);
 
-    const [showCode, setShowCode] = useState(true);
-    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+        if (variant !== 'wheel') str('variant', variant);
+        if (format !== 'hex') str('format', format);
+        if (theme !== 'auto') str('theme', theme);
+        if (title !== 'Color Picker') str('title', title);
+        if (brandColor) str('brandColor', brandColor);
+        if (maxHistory !== 10) expr('maxHistory', maxHistory);
+        (Object.keys(toggles) as ToggleKey[]).forEach((key) => {
+            if (toggles[key] === DEFAULT_TOGGLES[key]) return;
+            if (toggles[key]) props.push(key);
+            else expr(key, false);
+        });
 
-    const handleToggle = (key: keyof typeof toggles) =>
-        setToggles((prev) => ({...prev, [key]: !prev[key]}));
-
-    const generatedCode = useMemo(() => {
-        const props = [
-            `value="${selectedColor}"`,
-            `format="${format}"`,
-            `variant="${variant}"`,
-            `theme="${theme}"`,
-            `showTitle={${toggles.showTitle}}`,
-            `maxHistory={${maxHistory}}`,
-            toggles.disabled && `disabled={true}`,
-            toggles.inline && `inline={true}`,
-            title !== "Color Picker" && `title="${title}"`,
-            toggles.showAlpha && `showAlpha={true}`,
-            !toggles.showHistory && `showHistory={false}`,
-            !toggles.showFormats && `showFormats={false}`,
-            !toggles.showCopyButton && `showCopyButton={false}`,
-            !toggles.showPresets && `showPresets={false}`,
-            !toggles.enableHueSlider && `enableHueSlider={false}`,
-            toggles.enableFavorite && `enableFavorite={true}`,
-            toggles.enableShuffle && `enableShuffle={true}`,
-            brandColor !== "#3B82F6" && `brandColor="${brandColor}"`,
-        ].filter(Boolean);
-
-        return `<ColorPicker
-  ${props.join("\n  ")}
-  onChange={(color, format) => {
-    console.log('Selected color:', color);
-    console.log('Format:', format);
-  }}
-  onFormatChange={(format) => console.log('Format changed to:', format)}
-  onOpen={() => console.log('Color picker opened')}
-  onClose={() => console.log('Color picker closed')}
-/>`;
-    }, [selectedColor, format, variant, theme, toggles, title, brandColor]);
-
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(generatedCode);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-    }
+        return `import {ColorPicker} from '@zenuilabs/color-picker-react';\n\n<ColorPicker\n${props.map(p => `  ${p}`).join('\n')}\n/>`;
+    }, [variant, format, theme, title, brandColor, maxHistory, toggles]);
 
     return (
-        <section id="playground" className="pt-10 pb-20 max-w-[1200px] mx-auto px-6 lg:px-0">
-            <div className="text-center">
-                <h2 className="text-[2.5rem] font-bold dark:text-darkText text-gray-900 mb-2">
-                    Interactive Playground
-                </h2>
-                <p className="text-base lg:text-lg dark:text-darkTextMuted text-gray-600 max-w-2xl mx-auto">
-                    Experiment with different configurations and see how the color picker adapts to your needs.
-                </p>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-[50px] lg:gap-[100px] mt-12">
-                <div className="space-y-6 flex-1 w-full lg:min-w-[400px] max-w-[60%]">
-                    <div className="dark:bg-gray-900 rounded-xl shadow-lg p-6 mb-6">
-                        <div className="flex items-center mb-4">
-                            <Settings className="w-6 h-6 text-accent mr-2"/>
-                            <h3 className="text-lg font-semibold dark:text-darkText text-gray-900">Configuration</h3>
-                        </div>
-
-                        <div className="space-y-6 mt-5">
-                            <div className="flex flex-col lg:flex-row gap-5">
-                                <SelectField
-                                    label="Color Format"
-                                    name="format"
-                                    value={format}
-                                    options={formatOptions}
-                                    openDropdown={openDropdown}
-                                    setOpenDropdown={setOpenDropdown}
-                                    onChange={(val) => setFormat(val as ColorFormat)}
-                                />
-
-                                <SelectField
-                                    label="Variant"
-                                    name="variant"
-                                    value={variant}
-                                    options={variantOptions}
-                                    openDropdown={openDropdown}
-                                    setOpenDropdown={setOpenDropdown}
-                                    onChange={(val) => setVariant(val as ColorPickerVariant)}
-                                />
-                            </div>
-
-                            <div className="flex flex-col lg:flex-row gap-5">
-                                <SelectField
-                                    label="Theme"
-                                    name="theme"
-                                    value={theme}
-                                    options={themeOptions}
-                                    openDropdown={openDropdown}
-                                    setOpenDropdown={setOpenDropdown}
-                                    onChange={(val) => setTheme(val as Themes)}
-                                />
-
-                                <InputField
-                                    label="Title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="Enter color picker title"
-                                />
-                            </div>
-
-                            <div className='w-full flex gap-5 flex-col lg:flex-row'>
-                                <div className="flex-1">
-                                    <label
-                                        className="block text-sm font-medium text-gray-700 mb-2 dark:text-darkTextMuted">
-                                        Brand Color
-                                    </label>
-                                    <div
-                                        ref={brandColorButtonRef}
-                                        className='border flex items-center gap-3 border-gray-200 dark:border-darkBorder rounded-lg p-1'>
-                                        <div className='size-8 rounded-md' style={{backgroundColor: brandColor}}></div>
-                                        <p className='text-base text-gray-800 dark:text-darkTextMuted'>{brandColor || ''}</p>
-                                    </div>
-                                    <ColorPicker
-                                        variant="hue-box"
-                                        showPresets={false}
-                                        showHistory={false}
-                                        showAlpha={false}
-                                        triggerRef={brandColorButtonRef}
-                                        showCopyButton={false}
-                                        showDefaultButton={false}
-                                        showFormats={false}
-                                        enableHueSlider={true}
-                                        showTitle={false}
-                                        onChange={(color) => setBrandColor(color.hex)}
-                                    />
-                                </div>
-
-                                <div className="flex-1">
-                                    <InputField
-                                        label={'Max History'}
-                                        type={'number'}
-                                        value={maxHistory}
-                                        onChange={(e) => setMaxHistory(Number(e.target.value))}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center mb-6 mt-8">
-                            <Settings className="w-6 h-6 text-accent mr-2"/>
-                            <h3 className="text-lg font-semibold dark:text-darkText text-gray-900">Display Options</h3>
-                        </div>
-
-                        <div className="grid mt-5 grid-cols-2 lg:grid-cols-3 gap-y-5">
-                            {Object.entries(toggles).map(([key, value]) => (
-                                <CheckboxField
-                                    key={key}
-                                    id={key}
-                                    label={key.replace(/([A-Z])/g, " $1").trim()}
-                                    checked={value}
-                                    onChange={() => handleToggle(key as keyof typeof toggles)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="dark:bg-gray-900 rounded-xl shadow-lg p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <Code className="w-6 h-6 text-accent mr-2"/>
-                                <h3 className="text-lg font-semibold dark:text-darkText text-gray-900">Generated
-                                    Code</h3>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowCode(!showCode)}
-                                className="flex cursor-pointer items-center px-3 py-1.5 text-sm text-accent dark:hover:bg-gray-800 hover:bg-accent/10 rounded-lg transition-colors"
-                            >
-                                <Eye className="w-4 h-4 mr-1"/>
-                                {showCode ? "Hide" : "Show"}
-                            </button>
-                        </div>
-
-                        {showCode && (
-                            <div className='relative mt-4'>
-                                <SyntaxHighlighter
-                                    language="tsx"
-                                    style={atomDark}
-                                    wrapLines={true}
-                                    showLineNumbers={true}
-                                    customStyle={{
-                                        borderRadius: "0.75rem",
-                                        padding: "1rem",
-                                        fontSize: "0.875rem",
-                                        background: "#1e1e1e",
-                                        scrollbarWidth: 'none'
-                                    }}
-                                >
-                                    {generatedCode}
-                                </SyntaxHighlighter>
-
-                                <button
-                                    onClick={handleCopy}
-                                    className='absolute top-3 right-3 text-darkText bg-gray-700 px-3 py-1 cursor-pointer text-[0.9rem] rounded-lg'>{
-                                    copied ? 'Copied!' : 'Copy'
-                                }
-                                </button>
-                            </div>
-                        )}
-                    </div>
+        <section id="playground" className="bg-card/40 py-24 lg:py-32">
+            <div className="mx-auto max-w-[1240px] px-4 sm:px-6">
+                <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+                    <h2 className="display text-[clamp(2.8rem,6vw,5rem)]">
+                        The <em>mixing desk.</em>
+                    </h2>
+                    <p className="max-w-md text-lg leading-relaxed text-muted">
+                        Flip every prop and copy the result. The snippet only lists what you changed from the
+                        defaults.
+                    </p>
                 </div>
 
-                <div className="lg:sticky w-full lg:w-auto lg:top-8">
-                    <ColorPicker
-                        value={selectedColor}
-                        format={format}
-                        containerClasses={'w-full'}
-                        variant={variant}
-                        theme={theme}
-                        title={title}
-                        maxHistory={maxHistory}
-                        brandColor={brandColor}
-                        popupClasses="border-gray-200 w-full lg:w-[420px]"
-                        {...toggles}
-                        onChange={(color) => setSelectedColor(color.hex)}
-                        onFormatChange={(newFormat) => setFormat(newFormat)}
-                        onOpen={() => console.log("Color picker opened")}
-                        onClose={() => console.log("Color picker closed")}
-                    />
+                <div className="mt-14 grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+                    <div className="grid content-start gap-6">
+                        <Panel title="Shape">
+                            <div className="grid gap-5">
+                                <Segmented label="variant" value={variant} options={['wheel', 'hue-box', 'hue-slider', 'spectrum', 'sliders', 'swatches'] as const} onChange={setVariant}/>
+                                <Segmented label="format" value={format} options={['hex', 'rgb', 'hsl', 'hsv', 'cmyk'] as const} onChange={setFormat}/>
+                                <Segmented label="theme" value={theme} options={['auto', 'light', 'dark'] as const} onChange={setTheme}/>
+                                <div className="grid gap-5 sm:grid-cols-2">
+                                    <label className="block">
+                                        <span className="mb-2 block text-sm text-muted">title</span>
+                                        <input value={title} onChange={(e) => setTitle(e.target.value)}
+                                               className="h-11 w-full rounded-xl border border-line bg-paper px-3 font-mono text-sm outline-none transition focus:border-ink focus:ring-4 focus:ring-ink/20"/>
+                                    </label>
+                                    <div>
+                                        <span className="mb-2 block text-sm text-muted">maxHistory</span>
+                                        <div className="flex h-11 items-center justify-between rounded-xl border border-line bg-paper px-1">
+                                            <button type="button" aria-label="Fewer"
+                                                    onClick={() => setMaxHistory(n => Math.max(0, n - 1))}
+                                                    className="grid size-9 cursor-pointer place-items-center rounded-lg text-lg hover:bg-soft">−
+                                            </button>
+                                            <span className="font-mono text-sm tabular-nums" aria-live="polite">{maxHistory}</span>
+                                            <button type="button" aria-label="More"
+                                                    onClick={() => setMaxHistory(n => Math.min(30, n + 1))}
+                                                    className="grid size-9 cursor-pointer place-items-center rounded-lg text-lg hover:bg-soft">+
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="mb-2 block text-sm text-muted">brandColor <span className="opacity-70">(opens a second picker through triggerRef)</span></span>
+                                    <div className="flex items-center gap-2">
+                                        <button ref={brandRef} type="button"
+                                                className="flex h-11 flex-1 cursor-pointer items-center gap-3 rounded-xl border border-line bg-paper px-2 text-left font-mono text-sm transition hover:border-[var(--line-strong)]">
+                                            <span className="size-7 rounded-lg border border-line"
+                                                  style={{background: brandColor ?? 'var(--zcp-accent, #00aa45)'}}/>
+                                            {brandColor ?? 'default'}
+                                        </button>
+                                        {brandColor && (
+                                            <button type="button" onClick={() => setBrandColor(null)}
+                                                    className="h-11 cursor-pointer rounded-xl px-3 text-sm text-muted hover:bg-soft hover:text-text">
+                                                reset
+                                            </button>
+                                        )}
+                                    </div>
+                                    <ColorPicker
+                                        triggerRef={brandRef}
+                                        value={brandColor ?? '#00AA45'}
+                                        onChange={(c) => setBrandColor(c.hex.slice(0, 7))}
+                                        variant="hue-box"
+                                        enableHueSlider
+                                        showTitle={false}
+                                        showAlpha={false}
+                                        showHistory={false}
+                                        showFormats={false}
+                                        showPresets={false}
+                                        showCopyButton={false}
+                                    />
+                                </div>
+                            </div>
+                        </Panel>
+
+                        <Panel title="Switches">
+                            <div className="grid gap-x-8 sm:grid-cols-2">
+                                {(Object.keys(toggles) as ToggleKey[]).map((key) => (
+                                    <Switch key={key} label={key} checked={toggles[key]}
+                                            onChange={() => setToggles(t => ({...t, [key]: !t[key]}))}/>
+                                ))}
+                            </div>
+                        </Panel>
+                    </div>
+
+                    <div className="grid content-start gap-6 lg:sticky lg:top-24 lg:self-start">
+                        <div
+                            className="relative grid min-h-[520px] place-items-center overflow-hidden rounded-[24px] border border-line p-6 [background-image:linear-gradient(var(--line)_1px,transparent_1px),linear-gradient(90deg,var(--line)_1px,transparent_1px)] [background-size:24px_24px] [background-position:-1px_-1px]">
+                            <span className="absolute left-4 top-3 font-mono text-[11px] text-muted">preview</span>
+                            <span className="absolute bottom-3 right-4 font-mono text-[11px] text-muted">{color}</span>
+                            <ColorPicker
+                                key={toggles.inline ? 'inline' : 'popover'}
+                                value={color}
+                                onChange={(c) => setColor(c.hex)}
+                                format={format}
+                                onFormatChange={setFormat}
+                                variant={variant}
+                                theme={theme === 'auto' ? undefined : theme}
+                                title={title}
+                                maxHistory={maxHistory}
+                                brandColor={brandColor ?? undefined}
+                                {...toggles}
+                            />
+                        </div>
+                        <CodeBlock code={code}/>
+                    </div>
                 </div>
             </div>
         </section>

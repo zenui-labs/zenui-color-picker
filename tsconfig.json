@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["./src", "vite-env.d.ts"]
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["./src", "vite-env.d.ts", "vite.config.ts", "vite.build.ts"]
 }
