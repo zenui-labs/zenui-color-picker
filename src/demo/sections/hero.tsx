@@ -8,7 +8,7 @@ import {Parallax} from "../lib/reveal";
 import {Link} from "../lib/link";
 
 /** A paint sample card that names whatever is picked. */
-const PaintChip = () => {
+export const PaintChip = () => {
     const {color} = useInk();
     const {name, exact} = nearestColorName(color.rgb);
     const lrv = Math.round(getLuminance(color) * 100);

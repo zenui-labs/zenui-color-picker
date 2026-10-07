@@ -1,6 +1,6 @@
 {
   "name": "@zenuilabs/color-picker-react",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A small, dependency-free React color picker with wheel, hue box and hue slider variants, alpha, five color formats and CSS-variable theming.",
   "type": "module",
   "main": "./build/index.cjs.js",
@@ -26,7 +26,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepublishOnly": "npm run lint && npm run typecheck && npm run build:package"
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run build:package",
+    "og": "node scripts/og/render.mjs"
   },
   "keywords": [
     "color-picker",

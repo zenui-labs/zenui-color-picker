@@ -1,14 +1,29 @@
+<p align="center">
+  <a href="https://color-picker.zenui.net/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zenui-labs/zenui-color-picker/main/public/og/readme-dark.png">
+      <img alt="ColorPicker for React: pick colors in any format, styled your way." src="https://raw.githubusercontent.com/zenui-labs/zenui-color-picker/main/public/og/readme-light.png" width="100%">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@zenuilabs/color-picker-react"><img alt="npm version" src="https://img.shields.io/npm/v/@zenuilabs/color-picker-react?color=00aa45&label=npm"></a>
+  <a href="https://bundlephobia.com/package/@zenuilabs/color-picker-react"><img alt="minzipped size" src="https://img.shields.io/bundlephobia/minzip/@zenuilabs/color-picker-react?color=00aa45&label=minzipped"></a>
+  <img alt="zero dependencies" src="https://img.shields.io/badge/dependencies-0-00aa45">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/npm/l/@zenuilabs/color-picker-react?color=00aa45"></a>
+</p>
+
 # @zenuilabs/color-picker-react
 
 A React color picker with six variants, alpha, five color formats, color harmonies, a contrast check, history and
 favorites. It has no runtime dependencies, and you theme it with plain CSS variables.
 
-**Live demo:** https://color-picker.zenui.net/
-
-![ColorPicker preview](https://ik.imagekit.io/b2xymuik2/website%20preview%20image.png)
+**Live demo and docs:** https://color-picker.zenui.net/
 
 - [Install](#install)
 - [Quick start](#quick-start)
+- [Variants](#variants)
 - [Examples](#examples)
 - [Props](#props)
 - [Other exports](#other-exports)
@@ -16,6 +31,7 @@ favorites. It has no runtime dependencies, and you theme it with plain CSS varia
 - [Accessibility](#accessibility)
 - [Requirements](#requirements)
 - [Upgrading from 1.1](#upgrading-from-11)
+- [Changelog](#changelog)
 - [Contributing](#contributing)
 
 ## Install
@@ -45,6 +61,24 @@ export default function App() {
 ```
 
 That renders a swatch button. Clicking it opens the picker in a popover. Pass `inline` to render the panel in place.
+
+## Variants
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zenui-labs/zenui-color-picker/main/public/og/variants-dark.png">
+  <img alt="The six variants: wheel, hue box, spectrum, sliders, swatches and hue slider." src="https://raw.githubusercontent.com/zenui-labs/zenui-color-picker/main/public/og/variants-light.png" width="100%">
+</picture>
+
+Pick one with the `variant` prop. All six read and write the same `value`.
+
+| `variant`      | What it shows                                                        |
+|----------------|----------------------------------------------------------------------|
+| `'wheel'`      | Hue on a ring, saturation and brightness in the square. The default. |
+| `'hue-box'`    | Saturation and brightness box. Add `enableHueSlider` for a hue track. |
+| `'spectrum'`   | Every hue across, tints toward the top and shades toward the bottom. |
+| `'sliders'`    | Hue, saturation and brightness sliders with exact numbers.           |
+| `'swatches'`   | A 78 color palette grid. Arrow keys move between swatches.           |
+| `'hue-slider'` | Only a hue slider, for tight toolbars.                               |
 
 ## Examples
 
@@ -249,6 +283,10 @@ Set these variables on `.zcp`, or pass them through `containerStyle`:
   `ColorPickerVariant` and `Themes` are exported. `ColorPickerTheme` was never used and is now marked deprecated.
 - **Scrolling over the hue box** no longer changes the color.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) or the [GitHub releases](https://github.com/zenui-labs/zenui-color-picker/releases).
+
 ## Contributing
 
 ```bash
@@ -257,9 +295,11 @@ npm run dev            # the demo site
 npm run lint
 npm run typecheck
 npm run build:package  # builds the library into build/
+npm run og             # redraws the share images in public/og (needs Chrome)
 ```
 
-The library lives in `src/package`. The demo site lives in `src/demo` and imports the library from source.
+The library lives in `src/package`. The demo site lives in `src/demo` and imports the library from source. The share
+images are drawn from the real component by `scripts/og`, so rerun `npm run og` after a visual change or a version bump.
 
 ## License
 

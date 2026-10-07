@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* The share-image stage (npm run og) uses the same utilities. */
+@source "../scripts/og";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
